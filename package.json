@@ -25,6 +25,7 @@
   "dependencies": {
     "@formkit/icons": "latest",
     "@formkit/nuxt": "latest",
-    "@mdi/font": "^7.3.67"
+    "@mdi/font": "^7.3.67",
+    "octokit": "^3.1.2"
   }
 }

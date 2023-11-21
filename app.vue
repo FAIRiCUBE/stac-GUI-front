@@ -1,20 +1,89 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { reset, getNode } from '@formkit/core'
-import { token } from '@formkit/utils'
+import { Octokit } from "octokit"
 import {dataTypes} from './helpers/helpers'
 import LazyList from 'lazy-load-list/vue'
 import licenses from './helpers/licenses.json'
 
-const filterText = ref("")
-const items = ref([])
 
-const result = await fetch("https://stacapi.eoxhub.fairicube.eu/collections/index/items?limit=200");
-const data = await result.json();
+const filterText = ref("")
+const filenameList = []
+
+const fetchList = async (list, returnList=[]) => {
+  const catalogItems = list.map(async url => {
+    const itemCatalogRequest = await fetch(url)
+    const itemCatalog = await itemCatalogRequest.json()
+    returnList.push(itemCatalog)
+  })
+  await Promise.all(catalogItems)
+  return returnList
+
+}
+
+// providing the list directly from stac-fastapi
+// const result = await fetch("https://stacapi.eoxhub.fairicube.eu/collections/index/items?limit=200");
+
+// const data = await result.json();
+
+//TODO: remove stat:'all', the following part should be continued after the wor on the backend is over.
+const octokit = new Octokit({});
+const branches = await octokit.request('GET /repos/{owner}/{repo}/branches', {
+  owner: 'FAIRICUBE',
+  repo: 'data-requests',
+  state:'all',
+  headers: {
+    'X-GitHub-Api-Version': '2022-11-28'
+  }
+})
+
+const list = await branches.data
+
+
+
+const prBranches = list.filter(item => item.name != "main")
+
+
+const result = async () =>{
+  let branchList = []
+  const results = prBranches.map(async item => {
+    const commitURL = item.commit.url
+    const fileURL = await fetch(commitURL)
+    const fileURLResponse = await fileURL.json()
+    if (fileURLResponse.files[0].status === "added") {
+      const filename  = fileURLResponse.files[0].filename
+      filenameList.push(filename.substr(10))
+    const fileJSON = `https://raw.githubusercontent.com/FAIRiCUBE/data-requests/${item.name}/${filename}`
+    branchList.push(fileJSON)
+    }
+  })
+  await Promise.all(results)
+  return fetchList(branchList)
+
+}
+
+const BranchData = await result()
+
+const main = await fetch("https://raw.githubusercontent.com/FAIRiCUBE/data-requests/main/stac_dist/catalog.json")
+const mainCatalog = await main.json();
+const mainItemsLinks = []
+if (mainCatalog.links !== undefined && Array.isArray(mainCatalog.links) === true) {
+  mainCatalog.links.filter(item => item.rel === "item" && filenameList.includes(item.href.substr(2)) === false)
+  .map(item => {
+      let url = `https://raw.githubusercontent.com/FAIRiCUBE/data-requests/main/stac_dist/${item.href.substr(2)}`
+      mainItemsLinks.push(url)
+})
+}
+const mainResults = await fetchList(mainItemsLinks)
+
+const data = BranchData.concat(mainResults)
+
+
+
+
 const filteredProduct = computed( () => {
             let filter = filterText.value
-            if (!filter.length) return data.features
-            return data.features.filter( item =>
+            if (!filter.length) return data
+            return data.filter( item =>
                 item.id.toLowerCase().includes(filter.toLowerCase())
             )
         })
@@ -56,8 +125,14 @@ stac.properties.providers.map( provider =>  {
     doc_link: provider.url
 
   }
-  formProduct.providers.push(providerObject)
+  formProduct.providers.push(providerObject);
 })
+formProduct.identifier = stac.id;
+formProduct.title = stac.properties.title
+formProduct.source_type = stac.properties.datasource_type;
+formProduct.description = stac.properties.description;
+formProduct.legal.keywords = stac.properties.keywords;
+
 
 return formProduct
 }
@@ -126,7 +201,7 @@ async function submit(values) {
       >
         <template v-slot="{item}">
           <div class="bbox" style="align-items: baseline; flex-direction: row-reverse;">
-            <p class="title">{{ item.id }}</p>
+            <p class="title" style="min-width: fit-content;">{{ item.properties.title || item.id}}</p>
             <FormKit
               type="button"
               label="Edit"
@@ -247,7 +322,7 @@ async function submit(values) {
       </FormKit>
       <FormKit
         type="button"
-        label="+ Add bands"
+        label="+ Add Organizations"
         help="Add another band"
         @click="() => node.input(value.concat({}))"
       />
