@@ -1,6 +1,6 @@
 {
     "owner": "baloola",
-    "repo":"data-request",
+    "repo":"data-requests",
     "server": {
         "url" : "http://0.0.0.0:5000"
     }
