@@ -118,17 +118,22 @@ const createLicenses = licenses.licenses.map((license) => {
   licensesData.push({ label: license.name, value: license.licenseId });
 });
 async function submit(values) {
-  //TODO: must create a stac item before sending it to (post=create/put=update) and delete?
+
   const submitStac = formToStac(values);
-  // const request = await fetch(`${server}/item-requests`, {
-  //   method: "GET",
-  //   // body: JSON.stringify(values),
-  //   headers: {
-  //     "x-user": owner,
-  //     "x-FairicubeOwner": true,
-  //   },
-  // });
-  // const gad = await request.json();
+  const request = await fetch(`${server}/item-requests/stac_dist/${submitStac.stac.id}.json`, {
+    method: "PUT",
+    body: JSON.stringify(submitStac),
+    headers: {
+      "content-type": "application/json",
+      "x-user": owner,
+      "x-FairicubeOwner": true,
+
+    },
+  });
+  if (await request.status === 200 ) {
+    backToList()
+  }
+
 }
 </script>
 
@@ -169,7 +174,7 @@ async function submit(values) {
               style="align-items: baseline; flex-direction: row-reverse"
             >
               <p class="title" style="min-width: fit-content">
-                {{ item.properties.title || item.id }}
+                {{ (item.properties && item.properties.title) || item.id }}
               </p>
               <FormKit
                 type="button"

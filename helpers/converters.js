@@ -98,7 +98,7 @@ const stacToForm = (stac) => {
     ? (formProduct.time_axis.bbox = range)
     : (formProduct.time_axis.values = range);
   if (timeDim.step !== undefined) formProduct.time_axis.step = {};
-  if (typeof timeDim.step === "string") {
+  if (typeof timeDim.step === "string" && timeDim.step.startsWith("P")) {
     let parsedStep = parse(timeDim.step);
     formProduct.time_axis.step.Y = parsedStep.years;
     formProduct.time_axis.step.M = parsedStep.months;
@@ -271,16 +271,21 @@ const formToStac = (formProduct) => {
     };
   });
 
-  // TODO get bbox if spatial axes are in values only
-  let edges = [
-    formProduct.horizontal_axis.bbox[0],
-    formProduct.vertical_axis.bbox[0],
-    formProduct.horizontal_axis.bbox[1],
-    formProduct.vertical_axis.bbox[1],
-  ];
+  if (formProduct.horizontal_axis !== undefined && formProduct.vertical_axis !== undefined) {
+    let edges =
+    Array.isArray(formProduct.horizontal_axis.bbox) &&
+    Array.isArray(formProduct.vertical_axis.bbox)
+      ? [
+          formProduct.horizontal_axis.bbox[0],
+          formProduct.vertical_axis.bbox[0],
+          formProduct.horizontal_axis.bbox[1],
+          formProduct.vertical_axis.bbox[1],
+        ]
+      : [];
   formProduct.horizontal_axis.horizontal_crs ===
     formProduct.vertical_axis.vertical_crs &&
-  formProduct.horizontal_axis.horizontal_crs !== 4326
+  formProduct.horizontal_axis.horizontal_crs !== 4326 &&
+  formProduct.horizontal_axis.horizontal_crs !== undefined
     ? (stac.bbox = reprojectBoundingBox({
         bbox: edges,
         from: Number(formProduct.horizontal_axis.horizontal_crs),
@@ -293,13 +298,16 @@ const formToStac = (formProduct) => {
     [stac.bbox[2], stac.bbox[3]],
     [stac.bbox[2], stac.bbox[1]],
   ];
+  }
 
-  let range =
+ if (formProduct.time_axis !== undefined) {
+    let range =
     formProduct.time_axis.bbox !== undefined &&
     Array.isArray(formProduct.time_axis.bbox)
       ? formProduct.time_axis.bbox
       : formProduct.time_axis.values;
 
+  if (range !== undefined)
   range = range.map((time) =>
     ![undefined, null].includes(time) && typeof time === "string"
       ? (time = `${time}Z`)
@@ -330,6 +338,7 @@ const formToStac = (formProduct) => {
   times = hasTimes ? times.replace("Ms", "M") : "";
 
   cube.time.step = `${dates}${times}`;
+ }
   const bands = formProduct.bands;
   if (bands !== undefined && Array.isArray(bands))
     bands.map((band) => {
@@ -354,7 +363,10 @@ const formToStac = (formProduct) => {
   stac.properties.license = formProduct.legal.license;
   stac.properties.personalData = formProduct.legal.personalData;
   stac.properties.Provenance_name = formProduct.legal.Provenance_name;
-  stac.properties.datetime = `${formProduct.legal.datetime}Z`;
+  let productTime = formProduct.legal.datetime
+  stac.properties.datetime = ![undefined, null].includes(productTime) && typeof productTime === "string"
+  ? (productTime = `${productTime}Z`)
+  : productTime
 
   stac.properties.use_case_S4E = formProduct.use_case_S4E;
   stac.properties.use_case_WER = formProduct.use_case_WER;
@@ -362,7 +374,7 @@ const formToStac = (formProduct) => {
   stac.properties.use_case_NILU = formProduct.use_case_NILU;
 
   stac.properties.platform = formProduct.platform;
-  const itemState = "edited";
+  const itemState = formProduct.state || "created";
   return {
     stac: stac,
     state: itemState,
