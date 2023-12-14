@@ -9,10 +9,10 @@ export default defineNuxtConfig({
     apiSecret: "123",
     // Keys within public, will be also exposed to the client-side
     public: {
-      apiBase: process.env.NUXT_API_BASE_URL || "baloola",
+      apiBase: process.env.NUXT_API_BASE_URL || "",
       owner: process.env.NUXT_OWNER,
       repo: process.env.NUXT_REPO,
-      authentication: process.env.NUXt_AUTH,
+      authentication: process.env.NUXT_AUTH || "",
     }
   },
   build: {

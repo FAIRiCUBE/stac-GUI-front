@@ -23,9 +23,10 @@ const fetchList = async (list, returnList = []) => {
 
 //TODO: remove stat:'all', the following part should be continued after the wor on the backend is over.
 
-const owner = config.owner;
-const repo = config.repo;
-const server = config.server.url;
+const owner = config.public.owner;
+const repo = config.public.repo;
+const server = config.public.apiBase;
+const auth = config.public.authentication
 const octokit = new Octokit({});
 const branches = await octokit.request("GET /repos/{owner}/{repo}/branches", {
   owner: owner,
@@ -129,7 +130,7 @@ async function submit(values) {
       "content-type": "application/json",
       "x-user": owner,
       "x-FairicubeOwner": true,
-      // "Authorization": `Basic ${btoa("fairicube:Bcpfyv23nX9TyApAgwUxzpGQ0sDieHNp")}`
+      "Authorization": `Basic ${btoa(`${auth}`)}`
 
     },
   });
