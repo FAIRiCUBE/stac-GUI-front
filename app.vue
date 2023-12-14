@@ -5,7 +5,8 @@ import { dataTypes } from "./helpers/helpers";
 import { stacToForm, formToStac } from "./helpers/converters";
 import LazyList from "lazy-load-list/vue";
 import licenses from "./helpers/licenses.json";
-import config from "./config/dev.json";
+
+const config = useRuntimeConfig()
 
 const filterText = ref("");
 const filenameList = [];
@@ -120,6 +121,7 @@ const createLicenses = licenses.licenses.map((license) => {
 async function submit(values) {
 
   const submitStac = formToStac(values);
+
   const request = await fetch(`${server}/item-requests/stac_dist/${submitStac.stac.id}.json`, {
     method: "PUT",
     body: JSON.stringify(submitStac),
@@ -127,6 +129,7 @@ async function submit(values) {
       "content-type": "application/json",
       "x-user": owner,
       "x-FairicubeOwner": true,
+      // "Authorization": `Basic ${btoa("fairicube:Bcpfyv23nX9TyApAgwUxzpGQ0sDieHNp")}`
 
     },
   });
