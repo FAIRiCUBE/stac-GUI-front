@@ -21,7 +21,7 @@ const fetchList = async (list, returnList = []) => {
   return returnList;
 };
 
-//TODO: remove stat:'all', the following part should be continued after the wor on the backend is over.
+
 
 const owner = config.public.owner;
 const repo = config.public.repo;
@@ -130,7 +130,8 @@ async function submit(values) {
       "content-type": "application/json",
       "x-user": owner,
       "x-FairicubeOwner": true,
-      "Authorization": `Basic ${btoa(`${auth}`)}`
+      "Authorization": useRequestHeaders(['authorization'].authorization),
+      // "Authorization": `Basic ${btoa(`${auth}`)}`
 
     },
   });
@@ -819,8 +820,7 @@ async function submit(values) {
           @click="() => node.input(value.concat({}))"
         />
       </FormKit>
-
-      <pre>{{ value }}</pre>
+      <!-- <pre>{{ value }}</pre> -->
     </FormKit>
   </div>
 </template>
