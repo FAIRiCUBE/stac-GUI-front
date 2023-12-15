@@ -124,7 +124,7 @@ async function submit(values) {
 
   const submitStac = formToStac(values);
 
-  const request = await fetch(`${server}/item-requests/stac_dist/${submitStac.stac.id}.json`, {
+  const request = await useFetch(`${server}/item-requests/stac_dist/${submitStac.stac.id}.json`, {
     method: "PUT",
     body: JSON.stringify(submitStac),
     headers: {
@@ -136,6 +136,7 @@ async function submit(values) {
 
     },
   });
+
   if (await request.status === 200 ) {
     backToList()
   }
