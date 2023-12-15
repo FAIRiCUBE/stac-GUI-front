@@ -96,6 +96,7 @@ const filteredProduct = computed(() => {
 
 /// TODO  need to set the initial values so that it could be edited from the server
 let product = ref({});
+const headers = useRequestHeaders()
 
 const showList = ref(true);
 const showForm = ref(false);
@@ -130,7 +131,7 @@ async function submit(values) {
       "content-type": "application/json",
       "x-user": owner,
       "x-FairicubeOwner": true,
-      "Authorization": useRequestHeaders(['authorization'].authorization),
+      "Authorization": headers.authorization
       // "Authorization": `Basic ${btoa(`${auth}`)}`
 
     },
