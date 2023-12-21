@@ -96,7 +96,6 @@ const filteredProduct = computed(() => {
 
 /// TODO  need to set the initial values so that it could be edited from the server
 let product = ref({});
-const headers = useRequestHeaders()
 
 const showList = ref(true);
 const showForm = ref(false);
@@ -124,16 +123,13 @@ async function submit(values) {
 
   const submitStac = formToStac(values);
 
-  const request = await useFetch(`${server}/item-requests/stac_dist/${submitStac.stac.id}.json`, {
+  const request = await useFetch(`/api/item-requests/stac_dist/${submitStac.stac.id}.json`, {
     method: "PUT",
     body: JSON.stringify(submitStac),
     headers: {
       "content-type": "application/json",
       "x-user": owner,
       "x-FairicubeOwner": true,
-      "Authorization": headers.authorization
-      // "Authorization": `Basic ${btoa(`${auth}`)}`
-
     },
   });
 
@@ -147,7 +143,7 @@ async function submit(values) {
 <template>
   <div class="github-issue-form">
     <img
-      src="https://avatars.githubusercontent.com/u/108520563?s=200&v=4"
+      src="https://fairicube.nilu.no/wp-content/uploads/sites/21/2022/09/fairicube_logo_footer_400x297.png"
       alt="Fairicube Logo"
       width="244"
       height="50"
