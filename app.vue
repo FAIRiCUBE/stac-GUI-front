@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed } from "vue";
-import { Octokit } from "octokit";
 import { dataTypes } from "./helpers/helpers";
 import { stacToForm, formToStac } from "./helpers/converters";
 import LazyList from "lazy-load-list/vue";
@@ -9,82 +8,20 @@ import licenses from "./helpers/licenses.json";
 const config = useRuntimeConfig()
 
 const filterText = ref("");
-const filenameList = [];
-
-const fetchList = async (list, returnList = []) => {
-  const catalogItems = list.map(async (url) => {
-    const itemCatalogRequest = await fetch(url);
-    const itemCatalog = await itemCatalogRequest.json();
-    returnList.push(itemCatalog);
-  });
-  await Promise.all(catalogItems);
-  return returnList;
-};
-
-
 
 const owner = config.public.owner;
-const repo = config.public.repo;
-const server = config.public.apiBase;
-const auth = config.public.authentication
-const octokit = new Octokit({});
-const branches = await octokit.request("GET /repos/{owner}/{repo}/branches", {
-  owner: owner,
-  repo: repo,
-  state: "all",
-  headers: {
-    "X-GitHub-Api-Version": "2022-11-28",
-  },
-});
 
-const list = await branches.data;
-
-const prBranches = list.filter((item) => item.name != "main");
-
-const result = async () => {
-  let branchList = [];
-  const results = prBranches.map(async (item) => {
-    const commitURL = item.commit.url;
-    const fileURL = await fetch(commitURL);
-    const fileURLResponse = await fileURL.json();
-    if (["added", "modified"].includes(fileURLResponse.files[0].status)) {
-      const filename = fileURLResponse.files[0].filename;
-      filenameList.push(filename.substr(10));
-      const fileJSON = `https://raw.githubusercontent.com/${owner}/${repo}/${item.name}/${filename}`;
-      branchList.push(fileJSON);
+const items = await fetch(
+  "/api/item-requests/items",{
+    headers: {
+      "content-type": "application/json",
+      "x-user": owner,
+      "x-FairicubeOwner": true,
     }
-  });
-  await Promise.all(results);
-  return fetchList(branchList);
-};
-
-const BranchData = await result();
-
-const main = await fetch(
-  `https://raw.githubusercontent.com/${owner}/${repo}/main/stac_dist/catalog.json`
-);
-const mainCatalog = await main.json();
-const mainItemsLinks = [];
-if (
-  mainCatalog.links !== undefined &&
-  Array.isArray(mainCatalog.links) === true
-) {
-  mainCatalog.links
-    .filter(
-      (item) =>
-        item.rel === "item" &&
-        filenameList.includes(item.href.substr(2)) === false
-    )
-    .map((item) => {
-      let url = `https://raw.githubusercontent.com/${owner}/${repo}/main/stac_dist/${item.href.substr(
-        2
-      )}`;
-      mainItemsLinks.push(url);
-    });
-}
-const mainResults = await fetchList(mainItemsLinks);
-
-const data = BranchData.concat(mainResults);
+  }
+  )
+const itemsList = await items.json();
+const data = itemsList.items;
 
 const filteredProduct = computed(() => {
   let filter = filterText.value;
