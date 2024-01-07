@@ -1,5 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
 export default defineNuxtConfig({
+  // sourcemap: false,
+  ssr: false,
+
   modules: ['@formkit/nuxt'],
   formkit: {
     autoImport: true

@@ -11,16 +11,15 @@ const filterText = ref("");
 
 const owner = config.public.owner;
 
-const items = await fetch(
+const items = await useFetch(
   "/api/item-requests/items",{
     headers: {
       "content-type": "application/json",
       "x-user": owner,
       "x-FairicubeOwner": true,
     }
-  }
-  )
-const itemsList = await items.json();
+})
+const itemsList = items.data._rawValue;
 const data = itemsList.items;
 
 const filteredProduct = computed(() => {
