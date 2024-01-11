@@ -153,7 +153,7 @@ const formToStac = (formProduct) => {
     id: "",
     properties: {
       license: "",
-      Description: "",
+      description: "",
       providers: [],
       dataSource: "",
       "cube:dimensions": {
