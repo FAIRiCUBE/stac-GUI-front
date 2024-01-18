@@ -35,8 +35,19 @@ let product = ref({});
 
 const showList = ref(true);
 const showForm = ref(false);
-const editForm = (item) => {
-  product = stacToForm(item);
+const editForm = async (item) => {
+  const itemData = await useFetch(
+  `/api/item-requests/${item.name}`,{
+    method:"POST",
+    body: JSON.stringify({item}),
+    headers: {
+      "content-type": "application/json",
+      "x-user": owner,
+      "x-FairicubeOwner": true,
+    }
+  })
+  const stacData = itemData.data._rawValue.stac;
+  product = stacToForm(stacData);
   showForm.value = true;
   showList.value = false;
 };
@@ -113,7 +124,7 @@ async function submit(values) {
               style="align-items: baseline; flex-direction: row-reverse"
             >
               <p class="title" style="min-width: fit-content">
-                {{ (item.properties && item.properties.title) || item.id }}
+                {{ item.name }}
               </p>
               <FormKit
                 type="button"
