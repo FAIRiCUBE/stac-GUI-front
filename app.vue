@@ -5,89 +5,166 @@ import { stacToForm, formToStac } from "./helpers/converters";
 import LazyList from "lazy-load-list/vue";
 import licenses from "./helpers/licenses.json";
 
-const config = useRuntimeConfig()
+const config = useRuntimeConfig();
 
 const filterText = ref("");
 
 const owner = config.public.owner;
 
-const items = await useFetch(
-  "/api/item-requests/items",{
-    headers: {
-      "content-type": "application/json",
-      "x-user": owner,
-      "x-FairicubeOwner": true,
-    }
-})
+const items = await useFetch("/api/item-requests/items", {
+  headers: {
+    "content-type": "application/json",
+    "x-user": owner,
+    "x-FairicubeOwner": true,
+  },
+});
 const itemsList = items.data._rawValue;
 const data = itemsList.items;
+let itemsIdentifiers = [];
+data.map(item => itemsIdentifiers.push(item.name))
 
 const filteredProduct = computed(() => {
   let filter = filterText.value;
   if (!filter.length) return data;
   return data.filter((item) =>
-    item.id.toLowerCase().includes(filter.toLowerCase())
+    item.name.toLowerCase().includes(filter.toLowerCase())
   );
 });
 
 /// TODO  need to set the initial values so that it could be edited from the server
 let product = ref({});
 
+const stacIsNew = ref(true)
 const showList = ref(true);
+const showModal = ref(false);
+const showBackModal = ref(false);
 const showForm = ref(false);
 const editForm = async (item) => {
   const itemData = await useFetch(
-  `/api/item-requests/${item.name}`,{
-    method:"POST",
-    body: JSON.stringify({item}),
-    headers: {
-      "content-type": "application/json",
-      "x-user": owner,
-      "x-FairicubeOwner": true,
+    `/api/item-requests/${item.name}`,
+    {
+      method: "POST",
+      body: JSON.stringify({ item }),
+      headers: {
+        "content-type": "application/json",
+        "x-user": owner,
+        "x-FairicubeOwner": true,
+      },
     }
-  })
+  );
   const stacData = itemData.data._rawValue.stac;
   product = stacToForm(stacData);
+  stacIsNew.value = false;
   showForm.value = true;
   showList.value = false;
 };
 const createForm = () => {
   product = ref({});
+  stacIsNew.value = true;
   showForm.value = true;
   showList.value = false;
 };
+
 const backToList = () => {
   product = ref({});
   filterText.value = "";
+  showBackModal.value = false;
   showForm.value = false;
   showList.value = true;
 };
+const closeModal = () => {
+  showModal.value = false;
+  location.reload();
+};
+const openBackModal = () => {
+  showBackModal.value = true;
+};
+const closeBackModal = () => {
+  showBackModal.value = false;
+  location.reload();
+};
+const cancelBackModel = () => {
+  showBackModal.value = false;
+};
+const identifier_exists = ({ value })=> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(!itemsIdentifiers.includes(value)), 200)
+  })
+
+
+}
 let licensesData = [{ label: "Other", value: "other" }];
 const createLicenses = licenses.licenses.map((license) => {
   licensesData.push({ label: license.name, value: license.licenseId });
 });
 async function submit(values) {
-
   const submitStac = formToStac(values);
 
-  const request = await useFetch(`/api/item-requests/stac_dist/${submitStac.stac.id}.json`, {
-    method: "PUT",
-    body: JSON.stringify(submitStac),
-    headers: {
-      "content-type": "application/json",
-      "x-user": owner,
-      "x-FairicubeOwner": true,
-    },
-  });
-
-  if (await request.status === 200 ) {
-    backToList()
-  }
-
+  const request = await useFetch(
+    `/api/item-requests/stac_dist/${submitStac.stac.id}.json`,
+    {
+      onRequest({ req, options }) {
+        options.method = "PUT";
+        options.body = JSON.stringify(submitStac);
+        options.headers = {
+          "content-type": "application/json",
+          "x-user": owner,
+          "x-FairicubeOwner": true,
+        };
+      },
+      onResponse({ req, response }) {
+        if (response.status === 200) {
+          showModal.value = true;
+          // backToList();
+        }
+      },
+      onResponseError({ req, response }) {
+        // Handle the response errors
+      },
+    }
+  );
 }
 </script>
 
 <template>
+  <div class="modal-overlay title" v-show="showModal">
+    <div class="modal">
+      <img
+        class="check"
+        src="https://fairicube.nilu.no/wp-content/uploads/sites/21/2022/09/fairicube_logo_footer_400x297.png"
+        alt=""
+      />
+      <img class="check" src="img/check.png" style="max-width;: 50% !important" alt="" />
+      <p>Successfully submitted STAC data</p>
+      <FormKit
+        type="button"
+        label="Close"
+        style="background-color: gray;"
+        @click="closeModal"
+      />
+    </div>
+  </div>
+  <div class="modal-overlay title" v-show="showBackModal">
+    <div class="modal" style="height: 300px">
+      <img class="check" src="img/warning.png" style="size: 50%" alt="" />
+      <h6>WARNING</h6>
+      <p>By clicking back, all the input data will be lost!</p>
+      <div style="display: flex">
+        <FormKit
+          type="button"
+          label="Back"
+          style="background-color: Red;"
+          @click="backToList"
+        />
+        <FormKit
+          type="button"
+          label="Cancel"
+          style="background-color: gray;"
+          @click="cancelBackModel"
+        />
+      </div>
+    </div>
+  </div>
   <div class="github-issue-form">
     <img
       src="https://fairicube.nilu.no/wp-content/uploads/sites/21/2022/09/fairicube_logo_footer_400x297.png"
@@ -126,14 +203,27 @@ async function submit(values) {
               <p class="title" style="min-width: fit-content">
                 {{ item.name }}
               </p>
-              <FormKit
-                type="button"
-                label="Edit"
-                suffix-icon="settings"
-                style="background-color: gray"
-                help=""
-                @click="editForm(item)"
-              />
+              <div style="display: flex">
+                <FormKit
+                  type="button"
+                  label="Edit"
+                  suffix-icon="settings"
+                  style="background-color: gray"
+                  help=""
+                  @click="editForm(item)"
+                />
+
+                <a :href="item.pull">
+                  <FormKit
+                    v-if="item.pull"
+                    type="button"
+                    label="link"
+                    suffix-icon="github"
+                    style="background-color: black; max-width: inherit"
+                    help=""
+                  />
+                </a>
+              </div>
             </div>
           </template>
         </LazyList>
@@ -147,20 +237,29 @@ async function submit(values) {
       @submit="submit"
       v-show="showForm"
     >
-      <FormKit type="button" label="back" @click="backToList" />
+      <FormKit type="button" label="back" @click="openBackModal" />
 
       <FormKit
         type="text"
         name="title"
         label="Title"
         help="The title of the issue request"
+        validation="required"
       />
       <FormKit
+        :disabled="!stacIsNew"
         type="text"
         name="identifier"
         label="ID"
         help="The ID of the requested stac item"
+
+        :validation-rules="{ identifier_exists }"
+        :validation-messages="{
+          identifier_exists: 'Sorry, this Id is dublicated. please Try another one.',
+        }"
+        validation="required | (500)identifier_exists"
       />
+
       <FormKit
         type="textarea"
         name="description"
@@ -265,7 +364,7 @@ async function submit(values) {
               label="Documentation Link"
               name="doc_link"
               placeholder="https://www.example.com..."
-              validation="required|url"
+              validation="url"
             />
             <FormKit type="textarea" name="comments" label="Comments" />
             <FormKit
@@ -671,7 +770,7 @@ async function submit(values) {
         />
       </FormKit>
       <FormKit
-        type="checkbox"
+        type="radio"
         name="use_case_S4E"
         label="Priority (Climate change (S4E))"
         :options="{
@@ -680,7 +779,7 @@ async function submit(values) {
         }"
       />
       <FormKit
-        type="checkbox"
+        type="radio"
         name="use_case_WER"
         label="Biodiversity & agri (WER)"
         :options="{
@@ -689,7 +788,7 @@ async function submit(values) {
         }"
       />
       <FormKit
-        type="checkbox"
+        type="radio"
         name="use_case_NHM"
         label="Biodiversity occurrence cubes (NHM)"
         :options="{
@@ -698,7 +797,7 @@ async function submit(values) {
         }"
       />
       <FormKit
-        type="checkbox"
+        type="radio"
         name="use_case_NILU"
         label="Neighbourhood building stock (NILU)"
         :options="{
@@ -707,7 +806,7 @@ async function submit(values) {
         }"
       />
       <FormKit
-        type="checkbox"
+        type="radio"
         name="platform"
         label="Target Platform"
         :options="{
@@ -715,7 +814,7 @@ async function submit(values) {
           rasdaman: 'rasdaman',
           other: 'Other',
         }"
-        validation="required|min:1"
+        validation="required"
       />
       <FormKit
         type="text"
@@ -810,6 +909,46 @@ pre {
   left: calc(100% + 0.5em);
   color: red;
   font-size: 0.75em;
+}
+.modal-overlay {
+  position: fixed;
+  z-index: 1000 !important;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  background-color: #000000da;
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  align-content: stretch;
+  justify-content: space-evenly;
+  align-items: center;
+  text-align: center;
+  background-color: white;
+  height: 500px;
+  width: 500px;
+  margin-top: 10%;
+  padding: 60px 0;
+  border-radius: 20px;
+}
+.check {
+  width: 150px;
+}
+
+h6 {
+  font-weight: 500;
+  font-size: 28px;
+  margin: 20px 0;
+}
+
+p {
+  font-size: 16px;
+  margin: 20px 0;
 }
 button {
   align-self: flex-start;
