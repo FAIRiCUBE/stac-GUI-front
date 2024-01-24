@@ -88,7 +88,7 @@ const cancelBackModel = () => {
 };
 const identifier_exists = ({ value })=> {
   return new Promise((resolve) => {
-    setTimeout(() => resolve(!itemsIdentifiers.includes(value)), 200)
+    setTimeout(() => resolve(!stacIsNew.value || !itemsIdentifiers.includes(value)), 200)
   })
 }
 const distinct = (node) => !node.value.includes("/") && !node.value.includes(" ")
@@ -252,7 +252,6 @@ async function submit(values) {
         name="identifier"
         label="ID"
         help="The ID of the requested stac item"
-
         :validation-rules="{ identifier_exists, distinct }"
         :validation-messages="{
           identifier_exists: 'Sorry, this Id is duplicated. please Try another one.',
