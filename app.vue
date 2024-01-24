@@ -231,6 +231,7 @@ async function submit(values) {
     <FormKit
       type="form"
       id="registration"
+      @submit="submit"
       v-model="product"
       #default="{ value, state: { dirty } }"
       v-show="showForm"
