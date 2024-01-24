@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed} from "vue";
 import { dataTypes } from "./helpers/helpers";
 import { stacToForm, formToStac } from "./helpers/converters";
 import LazyList from "lazy-load-list/vue";
@@ -134,7 +134,7 @@ async function submit(values) {
         src="https://fairicube.nilu.no/wp-content/uploads/sites/21/2022/09/fairicube_logo_footer_400x297.png"
         alt=""
       />
-      <img class="check" src="img/check.png" style="max-width;: 50% !important" alt="" />
+      <img class="check" src="~/assets/img/check.png" style="max-width;: 50% !important" alt="" />
       <p>Successfully submitted STAC data</p>
       <FormKit
         type="button"
@@ -146,7 +146,7 @@ async function submit(values) {
   </div>
   <div class="modal-overlay title" v-show="showBackModal">
     <div class="modal" style="height: 300px">
-      <img class="check" src="img/warning.png" style="size: 50%" alt="" />
+      <img class="check" src="~/assets/img/warning.png" style="size: 50%" alt="" />
       <h6>WARNING</h6>
       <p>By clicking back, all the input data will be lost!</p>
       <div style="display: flex">
@@ -233,9 +233,10 @@ async function submit(values) {
       type="form"
       id="registration"
       v-model="product"
-      #default="{ value }"
-      @submit="submit"
+      #default="{ value, state: { dirty } }"
       v-show="showForm"
+      dirty-behavior="compare"
+      :actions="false"
     >
       <FormKit type="button" label="back" @click="openBackModal" />
 
@@ -864,7 +865,13 @@ async function submit(values) {
           @click="() => node.input(value.concat({}))"
         />
       </FormKit>
-      <!-- <pre>{{ value }}</pre> -->
+      <FormKit
+      type="submit"
+      @submit="submit"
+      label="submit"
+      :disabled="!dirty"
+    />
+      <!-- <pre>{{ dirty }}</pre> -->
     </FormKit>
   </div>
 </template>
