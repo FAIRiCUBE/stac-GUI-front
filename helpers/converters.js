@@ -306,7 +306,7 @@ const formToStac = (formProduct) => {
     Array.isArray(formProduct.time_axis.bbox)
       ? formProduct.time_axis.bbox
       : formProduct.time_axis.values;
-  if(range && isArray(range) && [undefined, null].includes(range[1])) {
+  if(range && Array.isArray(range) && [undefined, null].includes(range[1])) {
     range[1] = "2999-01-01T00:00:00Z"
   }
 
