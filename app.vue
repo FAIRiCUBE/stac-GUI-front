@@ -90,9 +90,8 @@ const identifier_exists = ({ value })=> {
   return new Promise((resolve) => {
     setTimeout(() => resolve(!itemsIdentifiers.includes(value)), 200)
   })
-
-
 }
+const distinct = (node) => !node.value.includes("/") && !node.value.includes(" ")
 let licensesData = [{ label: "Other", value: "other" }];
 const createLicenses = licenses.licenses.map((license) => {
   licensesData.push({ label: license.name, value: license.licenseId });
@@ -254,11 +253,12 @@ async function submit(values) {
         label="ID"
         help="The ID of the requested stac item"
 
-        :validation-rules="{ identifier_exists }"
+        :validation-rules="{ identifier_exists, distinct }"
         :validation-messages="{
-          identifier_exists: 'Sorry, this Id is dublicated. please Try another one.',
+          identifier_exists: 'Sorry, this Id is duplicated. please Try another one.',
+          distinct: 'ID value must not contain spaces or slash (/) characters'
         }"
-        validation="required | (500)identifier_exists"
+        validation="required | (500)identifier_exists | distinct"
       />
 
       <FormKit
