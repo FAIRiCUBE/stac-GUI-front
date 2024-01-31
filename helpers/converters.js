@@ -53,7 +53,7 @@ const stacToForm = (stac) => {
   formProduct.title = stac.properties.title;
   formProduct.datasource_type = stac.properties.datasource_type;
   formProduct.description = stac.properties.description;
-  formProduct.legal.keywords = stac.properties.keywords;
+  formProduct.keywords = stac.properties.keywords;
   formProduct.general.area_cover = stac.properties.area_cover;
   const cube = stac.properties["cube:dimensions"];
   const h_axis = cube.x || null;
@@ -131,8 +131,8 @@ const stacToForm = (stac) => {
 
   formProduct.legal.license = stac.properties.license;
   formProduct.legal.personalData = stac.properties.personalData;
-  formProduct.legal.Provenance_name = stac.properties.Provenance_name;
-  formProduct.legal.datetime = stac.properties.datetime
+  formProduct.Provenance_name = stac.properties.Provenance_name;
+  formProduct.datetime = stac.properties.datetime
     ? stac.properties.datetime.replace("Z", "")
     : null;
 
@@ -235,7 +235,7 @@ const formToStac = (formProduct) => {
   stac.properties.title = formProduct.title;
   stac.properties.datasource_type = formProduct.datasource_type;
   stac.properties.description = formProduct.description;
-  stac.properties.keywords = formProduct.legal.keywords;
+  stac.properties.keywords = formProduct.keywords;
   stac.properties.area_cover = formProduct.general.area_cover;
   const cube = stac.properties["cube:dimensions"];
   const h_axis = cube.x || null;
@@ -365,8 +365,8 @@ const formToStac = (formProduct) => {
 
   stac.properties.license = formProduct.legal.license;
   stac.properties.personalData = formProduct.legal.personalData;
-  stac.properties.Provenance_name = formProduct.legal.Provenance_name;
-  let productTime = formProduct.legal.datetime
+  stac.properties.Provenance_name = formProduct.Provenance_name;
+  let productTime = formProduct.datetime
   stac.properties.datetime = ![undefined, null].includes(productTime) && typeof productTime === "string"
   ? (productTime = `${productTime}Z`)
   : productTime

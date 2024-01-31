@@ -147,7 +147,7 @@ async function submit(values) {
     <div class="modal" style="height: 300px">
       <img class="check" src="~/assets/img/warning.png" style="size: 50%" alt="" />
       <h6>WARNING</h6>
-      <p>By clicking back, all the input data will be lost!</p>
+      <p>By clicking the Back-Button, all recent changes will be lost!</p>
       <div style="display: flex">
         <FormKit
           type="button"
@@ -239,7 +239,7 @@ async function submit(values) {
       :actions="false"
     >
       <FormKit type="button" label="back" @click="openBackModal" />
-
+      <h2 class="title">General</h2>
       <FormKit
         type="text"
         name="title"
@@ -273,6 +273,9 @@ async function submit(values) {
         label="Source Type"
         help="The data source type"
       />
+      <FormKit type="group" name="general">
+        <FormKit type="text" name="area_cover" label="total area cover" />
+      </FormKit>
       <FormKit
         type="list"
         dynamic
@@ -383,10 +386,6 @@ async function submit(values) {
           help="Add another band"
           @click="() => node.input(value.concat({}))"
         />
-      </FormKit>
-      <FormKit type="group" name="general">
-        <h2 class="title">General</h2>
-        <FormKit type="text" name="area_cover" label="total area cover" />
       </FormKit>
       <FormKit type="group" name="horizontal_axis">
         <h2 class="title">Horizontal Axis</h2>
@@ -761,15 +760,20 @@ async function submit(values) {
           :options="licensesData"
         />
         <FormKit type="text" name="personalData" label="Personal Data" />
-        <FormKit type="text" name="Provenance_name" label="Provenance name" />
-        <FormKit type="text" name="keywords" label="Keywords" />
-        <FormKit
+
+      </FormKit>
+      <h2 class="title">Keywords</h2>
+      <FormKit type="text" name="keywords" label="Keywords" />
+      <h2 class="title">Provenance name</h2>
+      <FormKit type="text" name="Provenance_name" label="Provenance name" />
+      <h2 class="title">Dates</h2>
+      <FormKit
           type="datetime-local"
           step="1"
-          label="begin time"
+          label="Creation"
           name="datetime"
         />
-      </FormKit>
+      <h2 class="title">Internal</h2>
       <FormKit
         type="radio"
         name="use_case_S4E"
