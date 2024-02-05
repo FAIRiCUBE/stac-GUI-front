@@ -397,7 +397,8 @@ async function submit(values) {
           placeholder="4326"
         />
         <FormKit type="checkbox" name="regular" label="regular ?" />
-        <FormKit type="list" name="bbox" v-if="product.horizontal_axis.regular">
+        <FormKit type="group" name="bbox">
+          <FormKit type="list" name="x" v-if="product.horizontal_axis.regular">
           <div class="bbox">
             <h4 class="title" style="padding: 0.5em">BBOX</h4>
             <br />
@@ -421,10 +422,40 @@ async function submit(values) {
         </FormKit>
         <FormKit
           type="text"
-          name="values"
-          label="values"
+          name="x_values"
+          label="X values"
           v-if="!product.horizontal_axis.regular"
         />
+        <FormKit type="list" name="y" v-if="product.horizontal_axis.regular">
+          <div class="bbox">
+            <h4 class="title" style="padding: 0.5em">BBOX</h4>
+            <br />
+            <FormKit
+              type="text"
+              label="bottom long"
+              number
+              validation=""
+              placeholder="-90.0"
+              help="lower longitude"
+            />
+            <FormKit
+              type="text"
+              label="top long"
+              number
+              validation=""
+              placeholder="90.0"
+              help="top longitude"
+            />
+          </div>
+        </FormKit>
+        <FormKit
+          type="text"
+          name="y_values"
+          label="Y values"
+          v-if="!product.horizontal_axis.regular"
+        />
+        </FormKit>
+
         <FormKit
           type="text"
           name="unit_of_measure"
@@ -459,14 +490,14 @@ async function submit(values) {
             <br />
             <FormKit
               type="text"
-              label="bottom longitude"
+              label="bottom bound"
               number
               validation=""
               help="lower bound"
             />
             <FormKit
               type="text"
-              label="top longitude"
+              label="top bound"
               number
               validation=""
               help="Upper bound"
