@@ -212,7 +212,7 @@ async function submit(values) {
                   @click="editForm(item)"
                 />
 
-                <a :href="item.pull">
+                <a :href="item.pull" target="_blank" rel="noopener noreferrer">
                   <FormKit
                     v-if="item.pull"
                     type="button"
@@ -481,7 +481,7 @@ async function submit(values) {
           name="vertical_crs"
           label="Vertical CRS"
           help="reference system number in EPSG format e.g(4326)"
-          placeholder="4326"
+          placeholder="3855"
         />
         <FormKit type="checkbox" name="regular" label="regular ?" />
         <FormKit type="list" name="bbox" v-if="product.vertical_axis.regular">
@@ -514,7 +514,7 @@ async function submit(values) {
           type="text"
           name="unit_of_measure"
           label="Unit of Measure"
-          placeholder="degree"
+          placeholder="Meters"
         />
         <FormKit
           type="text"
