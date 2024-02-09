@@ -391,9 +391,12 @@ const formToStac = (formProduct) => {
 
   stac.properties.platform = formProduct.platform;
   const itemState = formProduct.state || "created";
+  const reviewers = formProduct.platform == "EOX" ? ["eox-cs1"]: formProduct.platform == "rasdaman" ? ["Mohinem"]: []
   return {
     stac: stac,
     state: itemState,
+    assignees: [formProduct.assignees],
+    reviewers: reviewers,
   };
 };
 

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed} from "vue";
+import { ref, computed } from "vue";
 import { dataTypes } from "./helpers/helpers";
 import { stacToForm, formToStac } from "./helpers/converters";
 import LazyList from "lazy-load-list/vue";
@@ -20,8 +20,9 @@ const items = await useFetch("/api/item-requests/items", {
 });
 const itemsList = items.data._rawValue;
 const data = itemsList.items;
+const members = itemsList.members;
 let itemsIdentifiers = [];
-data.map(item => itemsIdentifiers.push(item.name))
+data.map((item) => itemsIdentifiers.push(item.name));
 
 const filteredProduct = computed(() => {
   let filter = filterText.value;
@@ -34,7 +35,7 @@ const filteredProduct = computed(() => {
 /// TODO  need to set the initial values so that it could be edited from the server
 let product = ref({});
 
-const stacIsNew = ref(true)
+const stacIsNew = ref(true);
 const showList = ref(true);
 const showModal = ref(false);
 const showBackModal = ref(false);
@@ -54,6 +55,8 @@ const editForm = async (item) => {
   );
   const stacData = itemData.data._rawValue.stac;
   product = stacToForm(stacData);
+  product.members = members;
+  product.assignees = JSON.parse(JSON.stringify(item)).assignees;
   stacIsNew.value = false;
   showForm.value = true;
   showList.value = false;
@@ -86,12 +89,16 @@ const closeBackModal = () => {
 const cancelBackModel = () => {
   showBackModal.value = false;
 };
-const identifier_exists = ({ value })=> {
+const identifier_exists = ({ value }) => {
   return new Promise((resolve) => {
-    setTimeout(() => resolve(!stacIsNew.value || !itemsIdentifiers.includes(value)), 200)
-  })
-}
-const distinct = (node) => !node.value.includes("/") && !node.value.includes(" ")
+    setTimeout(
+      () => resolve(!stacIsNew.value || !itemsIdentifiers.includes(value)),
+      200
+    );
+  });
+};
+const distinct = (node) =>
+  !node.value.includes("/") && !node.value.includes(" ");
 let licensesData = [{ label: "Other", value: "other" }];
 const createLicenses = licenses.licenses.map((license) => {
   licensesData.push({ label: license.name, value: license.licenseId });
@@ -133,32 +140,42 @@ async function submit(values) {
         src="https://fairicube.nilu.no/wp-content/uploads/sites/21/2022/09/fairicube_logo_footer_400x297.png"
         alt=""
       />
-      <img class="check" src="~/assets/img/check.png" style="max-width;: 50% !important" alt="" />
+      <img
+        class="check"
+        src="~/assets/img/check.png"
+        style="max-width;: 50% !important"
+        alt=""
+      />
       <p>Successfully submitted STAC data</p>
       <FormKit
         type="button"
         label="Close"
-        style="background-color: gray;"
+        style="background-color: gray"
         @click="closeModal"
       />
     </div>
   </div>
   <div class="modal-overlay title" v-show="showBackModal">
     <div class="modal" style="height: 300px">
-      <img class="check" src="~/assets/img/warning.png" style="size: 50%" alt="" />
+      <img
+        class="check"
+        src="~/assets/img/warning.png"
+        style="size: 50%"
+        alt=""
+      />
       <h6>WARNING</h6>
       <p>By clicking the Back-Button, all recent changes will be lost!</p>
       <div style="display: flex">
         <FormKit
           type="button"
           label="Back"
-          style="background-color: Red;"
+          style="background-color: Red"
           @click="backToList"
         />
         <FormKit
           type="button"
           label="Cancel"
-          style="background-color: gray;"
+          style="background-color: gray"
           @click="cancelBackModel"
         />
       </div>
@@ -255,8 +272,9 @@ async function submit(values) {
         help="The ID of the requested stac item"
         :validation-rules="{ identifier_exists, distinct }"
         :validation-messages="{
-          identifier_exists: 'Sorry, this Id is duplicated. please Try another one.',
-          distinct: 'ID value must not contain spaces or slash (/) characters'
+          identifier_exists:
+            'Sorry, this Id is duplicated. please Try another one.',
+          distinct: 'ID value must not contain spaces or slash (/) characters',
         }"
         validation="required | (500)identifier_exists | distinct"
       />
@@ -399,61 +417,61 @@ async function submit(values) {
         <FormKit type="checkbox" name="regular" label="regular ?" />
         <FormKit type="group" name="bbox">
           <FormKit type="list" name="x" v-if="product.horizontal_axis.regular">
-          <div class="bbox">
-            <h4 class="title" style="padding: 0.5em">BBOX</h4>
-            <br />
-            <FormKit
-              type="text"
-              label="bottom lat"
-              number
-              validation=""
-              placeholder="-180.0"
-              help="lower latitude"
-            />
-            <FormKit
-              type="text"
-              label="top lat"
-              number
-              validation=""
-              placeholder="180.0"
-              help="top latitude"
-            />
-          </div>
-        </FormKit>
-        <FormKit
-          type="text"
-          name="x_values"
-          label="X values"
-          v-if="!product.horizontal_axis.regular"
-        />
-        <FormKit type="list" name="y" v-if="product.horizontal_axis.regular">
-          <div class="bbox">
-            <h4 class="title" style="padding: 0.5em">BBOX</h4>
-            <br />
-            <FormKit
-              type="text"
-              label="bottom long"
-              number
-              validation=""
-              placeholder="-90.0"
-              help="lower longitude"
-            />
-            <FormKit
-              type="text"
-              label="top long"
-              number
-              validation=""
-              placeholder="90.0"
-              help="top longitude"
-            />
-          </div>
-        </FormKit>
-        <FormKit
-          type="text"
-          name="y_values"
-          label="Y values"
-          v-if="!product.horizontal_axis.regular"
-        />
+            <div class="bbox">
+              <h4 class="title" style="padding: 0.5em">BBOX</h4>
+              <br />
+              <FormKit
+                type="text"
+                label="bottom lat"
+                number
+                validation=""
+                placeholder="-180.0"
+                help="lower latitude"
+              />
+              <FormKit
+                type="text"
+                label="top lat"
+                number
+                validation=""
+                placeholder="180.0"
+                help="top latitude"
+              />
+            </div>
+          </FormKit>
+          <FormKit
+            type="text"
+            name="x_values"
+            label="X values"
+            v-if="!product.horizontal_axis.regular"
+          />
+          <FormKit type="list" name="y" v-if="product.horizontal_axis.regular">
+            <div class="bbox">
+              <h4 class="title" style="padding: 0.5em">BBOX</h4>
+              <br />
+              <FormKit
+                type="text"
+                label="bottom long"
+                number
+                validation=""
+                placeholder="-90.0"
+                help="lower longitude"
+              />
+              <FormKit
+                type="text"
+                label="top long"
+                number
+                validation=""
+                placeholder="90.0"
+                help="top longitude"
+              />
+            </div>
+          </FormKit>
+          <FormKit
+            type="text"
+            name="y_values"
+            label="Y values"
+            v-if="!product.horizontal_axis.regular"
+          />
         </FormKit>
 
         <FormKit
@@ -791,7 +809,6 @@ async function submit(values) {
           :options="licensesData"
         />
         <FormKit type="text" name="personalData" label="Personal Data" />
-
       </FormKit>
       <h2 class="title">Keywords</h2>
       <FormKit type="text" name="keywords" label="Keywords" />
@@ -799,11 +816,11 @@ async function submit(values) {
       <FormKit type="text" name="Provenance_name" label="Provenance name" />
       <h2 class="title">Dates</h2>
       <FormKit
-          type="datetime-local"
-          step="1"
-          label="Creation"
-          name="datetime"
-        />
+        type="datetime-local"
+        step="1"
+        label="Creation"
+        name="datetime"
+      />
       <h2 class="title">Internal</h2>
       <FormKit
         type="radio"
@@ -901,11 +918,19 @@ async function submit(values) {
         />
       </FormKit>
       <FormKit
-      type="submit"
-      @submit="submit"
-      label="submit"
-      :disabled="!dirty"
-    />
+        type="select"
+        label="Assignees"
+        name="assignees"
+        placeholder="Select an assignee"
+        :options="members"
+        help="Select your Github name from the list to be assigned. "
+      />
+      <FormKit
+        type="submit"
+        @submit="submit"
+        label="submit"
+        :disabled="!dirty"
+      />
       <!-- <pre>{{ dirty }}</pre> -->
     </FormKit>
   </div>
