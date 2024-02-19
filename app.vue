@@ -4,6 +4,8 @@ import { dataTypes } from "./helpers/helpers";
 import { stacToForm, formToStac } from "./helpers/converters";
 import LazyList from "lazy-load-list/vue";
 import licenses from "./helpers/licenses.json";
+import { FormKitIcon } from "@formkit/vue";
+import { vAutoAnimate } from "@formkit/auto-animate";
 
 const config = useRuntimeConfig();
 
@@ -39,6 +41,7 @@ const stacIsNew = ref(true);
 const showList = ref(true);
 const showModal = ref(false);
 const showBackModal = ref(false);
+const showBboxError = ref(false);
 const showForm = ref(false);
 const editForm = async (item) => {
   const itemData = await useFetch(
@@ -89,6 +92,20 @@ const closeBackModal = () => {
 const cancelBackModel = () => {
   showBackModal.value = false;
 };
+
+const cancelBboxModel = () => {
+  showBboxError.value = false;
+};
+
+const useGlobeBound = () => {
+  showBboxError.value = false;
+  product.value.horizontal_axis.bbox.x[0] = -180;
+  product.value.horizontal_axis.bbox.y[0] = -90;
+  product.value.horizontal_axis.bbox.x[1] = 180;
+  product.value.horizontal_axis.bbox.y[1] = 90;
+  product.value.horizontal_axis.horizontal_crs = 4326;
+  submit(product.value);
+};
 const identifier_exists = ({ value }) => {
   return new Promise((resolve) => {
     setTimeout(
@@ -104,6 +121,19 @@ const createLicenses = licenses.licenses.map((license) => {
   licensesData.push({ label: license.name, value: license.licenseId });
 });
 async function submit(values) {
+  let submittedBbox = [
+    product.value.horizontal_axis.bbox.x[0],
+    product.value.horizontal_axis.bbox.y[0],
+    product.value.horizontal_axis.bbox.x[1],
+    product.value.horizontal_axis.bbox.y[1],
+  ];
+  let hasNoNullValues =
+    !submittedBbox.includes(undefined) && !submittedBbox.includes(null);
+  if (!hasNoNullValues) {
+    showBboxError.value = true;
+    return;
+  }
+
   const submitStac = formToStac(values);
 
   const request = await useFetch(
@@ -153,6 +183,36 @@ async function submit(values) {
         style="background-color: gray"
         @click="closeModal"
       />
+    </div>
+  </div>
+  <div class="modal-overlay title" v-show="showBboxError">
+    <div class="modal" style="height: 300px">
+      <img
+        class="check"
+        src="~/assets/img/warning.png"
+        style="size: 50%"
+        alt=""
+      />
+      <h6>WARNING</h6>
+      <p>
+        Projection error!, please check input bbox values. by clicking
+        continue, Global world bounds in WGS84 will be used in the generated
+        STAC item.
+      </p>
+      <div style="display: flex">
+        <FormKit
+          type="button"
+          label="Continue"
+          style="background-color: gray"
+          @click="useGlobeBound"
+        />
+        <FormKit
+          type="button"
+          label="Cancel"
+          style="background-color: gray"
+          @click="cancelBboxModel"
+        />
+      </div>
     </div>
   </div>
   <div class="modal-overlay title" v-show="showBackModal">
@@ -256,6 +316,17 @@ async function submit(values) {
       :actions="false"
     >
       <FormKit type="button" label="back" @click="openBackModal" />
+      <FormKit
+        type="radio"
+        name="platform"
+        label="Target Platform"
+        :options="{
+          eox: 'EOX',
+          rasdaman: 'rasdaman',
+          other: 'Other',
+        }"
+        validation="required"
+      />
       <h2 class="title">General</h2>
       <FormKit
         type="text"
@@ -299,6 +370,7 @@ async function submit(values) {
         dynamic
         #default="{ items, node, value }"
         name="assets"
+        v-if="product.platform !== 'rasdaman'"
       >
         <h2 class="title">Assets</h2>
         <FormKit
@@ -422,19 +494,19 @@ async function submit(values) {
               <br />
               <FormKit
                 type="text"
-                label="bottom lat"
+                label="bottom x bound"
                 number
-                validation=""
+                validation="number"
                 placeholder="-180.0"
-                help="lower latitude"
+                help="West Bound"
               />
               <FormKit
                 type="text"
-                label="top lat"
+                label="upper x bound"
                 number
-                validation=""
+                validation="number"
                 placeholder="180.0"
-                help="top latitude"
+                help="East Boound"
               />
             </div>
           </FormKit>
@@ -450,19 +522,19 @@ async function submit(values) {
               <br />
               <FormKit
                 type="text"
-                label="bottom long"
+                label="bottom y bound"
                 number
-                validation=""
+                validation="number"
                 placeholder="-90.0"
-                help="lower longitude"
+                help="South Bound"
               />
               <FormKit
                 type="text"
-                label="top long"
+                label="upper y bound"
                 number
-                validation=""
+                validation="number"
                 placeholder="90.0"
-                help="top longitude"
+                help="North Bound"
               />
             </div>
           </FormKit>
@@ -487,8 +559,14 @@ async function submit(values) {
         />
         <FormKit
           type="text"
-          name="resolution"
-          label="Resolution"
+          name="x_resolution"
+          label="X Resolution"
+          help="Resolution (or 'irregular'). Should be 1 value as required by UC, not all resolutions of dataset"
+        />
+        <FormKit
+          type="text"
+          name="y_resolution"
+          label="Y Resolution"
           help="Resolution (or 'irregular'). Should be 1 value as required by UC, not all resolutions of dataset"
         />
       </FormKit>
@@ -510,24 +588,18 @@ async function submit(values) {
               type="text"
               label="bottom bound"
               number
-              validation=""
+              validation="number"
               help="lower bound"
             />
             <FormKit
               type="text"
               label="top bound"
               number
-              validation=""
+              validation="number"
               help="Upper bound"
             />
           </div>
         </FormKit>
-        <FormKit
-          type="text"
-          name="values"
-          label="values"
-          v-if="!product.vertical_axis.regular"
-        />
         <FormKit
           type="text"
           name="unit_of_measure"
@@ -571,12 +643,45 @@ async function submit(values) {
           </div>
         </FormKit>
 
-        <FormKit
-          type="text"
-          name="values"
-          label="values"
-          v-if="!product.time_axis.regular"
-        />
+        <div v-auto-animate>
+          <FormKit
+            label="Values"
+            name="values"
+            type="list"
+            dynamic
+            #default="{ node, items, value }"
+            v-if="!product.time_axis.regular"
+          >
+            <div v-for="(item, index) in items" :key="item" class="todo">
+              <FormKit
+                type="datetime-local"
+                step="1"
+                style="max-width: fit-content"
+                name="datetime"
+                :index="index"
+              />
+              <ul class="controls">
+                <li>
+                  <button
+                    type="button"
+                    @click="
+                      () => node.input(value.filter((_, i) => i !== index))
+                    "
+                    class="button close"
+                  >
+                    <FormKitIcon icon="close" />
+                  </button>
+                </li>
+              </ul>
+            </div>
+            <FormKit
+              type="button"
+              style="background-color: gray"
+              @click="() => node.input(value.concat({}))"
+              >+</FormKit
+            >
+          </FormKit>
+        </div>
         <FormKit
           type="text"
           name="unit_of_measure"
@@ -606,6 +711,7 @@ async function submit(values) {
               step="1"
               name="Y"
               label="Years"
+              validation="number"
             />
             <FormKit
               type="number"
@@ -615,6 +721,7 @@ async function submit(values) {
               step="1"
               name="M"
               label="Months"
+              validation="number"
             />
             <FormKit
               type="number"
@@ -624,6 +731,7 @@ async function submit(values) {
               number
               name="D"
               label="Days"
+              validation="number"
             />
             <FormKit
               type="number"
@@ -633,6 +741,7 @@ async function submit(values) {
               step="1"
               name="H"
               label="Hours"
+              validation="number"
             />
             <FormKit
               type="number"
@@ -642,6 +751,7 @@ async function submit(values) {
               number
               name="Ms"
               label="Minutes"
+              validation="number"
             />
             <FormKit
               type="number"
@@ -651,6 +761,7 @@ async function submit(values) {
               number
               name="S"
               label="Seconds"
+              validation="number"
             />
           </FormKit>
         </div>
@@ -691,14 +802,14 @@ async function submit(values) {
                   type="text"
                   label="bottom left lat"
                   number
-                  validation=""
+                  validation="number"
                   help="Upper bound"
                 />
                 <FormKit
                   type="text"
                   label="bottom left long"
                   number
-                  validation=""
+                  validation="number"
                   help="lower bound"
                 />
               </div>
@@ -859,17 +970,6 @@ async function submit(values) {
         }"
       />
       <FormKit
-        type="radio"
-        name="platform"
-        label="Target Platform"
-        :options="{
-          eox: 'EOX',
-          rasdaman: 'rasdaman',
-          other: 'Other',
-        }"
-        validation="required"
-      />
-      <FormKit
         type="text"
         name="ingestion_status"
         label="Ingestion Status (rasdaman)"
@@ -879,6 +979,7 @@ async function submit(values) {
         dynamic
         #default="{ items, node, value }"
         name="thumbnails"
+        v-if="product.platform !== 'rasdaman'"
       >
         <h2 class="title">Thumbnails</h2>
         <FormKit
@@ -1005,6 +1106,55 @@ pre {
 }
 .check {
   width: 150px;
+}
+.controls {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+.todo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  max-width: fit-content;
+}
+.todo:deep(.formkit-outer) {
+  margin-bottom: 0;
+  flex-grow: 1;
+}
+.controls {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+.controls .button {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  color: #999;
+  line-height: 1;
+  transition: color 0.3s ease;
+  appearance: none;
+  font-size: 1em;
+  color: var(--fk-color-primary);
+  margin-left: 0.5rem;
+}
+.controls:deep(svg) {
+  display: block;
+  width: 1em;
+  max-height: 1.25em;
+  height: auto;
+  font-size: larger;
+  fill: currentColor;
+}
+.controls .close {
+  color: var(--fk-color-danger);
 }
 
 h6 {

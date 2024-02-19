@@ -60,17 +60,18 @@ const stacToForm = (stac) => {
   const v_axis = cube.y || null;
   const z_axis = cube.z || null;
   formProduct.horizontal_axis.bbox.x = h_axis.extent;
-  formProduct.horizontal_axis.x_values = h_axis.values;
+  formProduct.horizontal_axis.bbox.x_values = h_axis.values;
   formProduct.horizontal_axis.bbox.y = v_axis.extent;
-  formProduct.horizontal_axis.y_values = v_axis.values;
+  formProduct.horizontal_axis.bbox.y_values = v_axis.values;
   formProduct.horizontal_axis.horizontal_crs = h_axis.reference_system;
   formProduct.horizontal_axis.unit_of_measure = h_axis.unit_of_measure;
   formProduct.horizontal_axis.interpolation = h_axis.interpolation;
-  formProduct.horizontal_axis.resolution = h_axis.step;
+  formProduct.horizontal_axis.x_resolution = h_axis.step;
+  formProduct.horizontal_axis.y_resolution = v_axis.step;
   formProduct.horizontal_axis.regular = h_axis.values === undefined;
   if (z_axis) {
-    formProduct.vertical_axis.bbox = z_axis.extent;
-    formProduct.vertical_axis.values = z_axis.values;
+    formProduct.vertical_axis.bbox = z_axis.extent || [];
+    formProduct.vertical_axis.values = z_axis.values || [];
     formProduct.vertical_axis.vertical_crs = z_axis.reference_system;
     formProduct.vertical_axis.unit_of_measure = z_axis.unit_of_measure;
     formProduct.vertical_axis.interpolation = z_axis.interpolation;
@@ -94,15 +95,29 @@ const stacToForm = (stac) => {
     });
 
   let timeDim = cube.time || cube.t;
-  let range = timeDim.extent ? timeDim.extent : timeDim.values;
+  let range =
+    timeDim.extent &&
+    Array.isArray(timeDim.extent) &&
+    timeDim.extent.length === 2
+      ? timeDim.extent
+      : timeDim.values;
   range = range.map((time) =>
     ![undefined, null].includes(time) && typeof time === "string"
       ? time.replace("Z", "")
       : time
   );
-  timeDim.extent
-    ? (formProduct.time_axis.bbox = range)
-    : (formProduct.time_axis.values = range);
+  if (
+    timeDim.extent &&
+    Array.isArray(timeDim.extent) &&
+    timeDim.extent.length === 2
+  ) {
+    formProduct.time_axis.bbox = range;
+    formProduct.time_axis.regular = true;
+  } else {
+    formProduct.time_axis.values = range;
+    formProduct.time_axis.regular = false;
+  }
+
   if (timeDim.step !== undefined) formProduct.time_axis.step = {};
   if (typeof timeDim.step === "string" && timeDim.step.startsWith("P")) {
     let parsedStep = parse(timeDim.step);
@@ -251,16 +266,17 @@ const formToStac = (formProduct) => {
 
   formProduct.horizontal_axis.regular
     ? (h_axis.extent = formProduct.horizontal_axis.bbox.x)
-    : (h_axis.values = formProduct.horizontal_axis.x.values);
+    : (h_axis.values = formProduct.horizontal_axis.bbox.x_values);
 
   formProduct.horizontal_axis.regular
     ? (v_axis.extent = formProduct.horizontal_axis.bbox.y)
-    : (v_axis.values = formProduct.horizontal_axis.y.values);
+    : (v_axis.values = formProduct.horizontal_axis.y_values);
 
   h_axis.reference_system = formProduct.horizontal_axis.horizontal_crs;
   h_axis.unit_of_measure = formProduct.horizontal_axis.unit_of_measure;
   h_axis.interpolation = formProduct.horizontal_axis.interpolation;
-  h_axis.step = formProduct.horizontal_axis.resolution;
+  h_axis.step = formProduct.horizontal_axis.x_resolution;
+  v_axis.step = formProduct.horizontal_axis.y_resolution;
 
   formProduct.vertical_axis.regular
     ? (z_axis.extent = formProduct.vertical_axis.bbox)
@@ -319,7 +335,7 @@ const formToStac = (formProduct) => {
         ? formProduct.time_axis.bbox
         : formProduct.time_axis.values;
     if (range && Array.isArray(range) && [undefined, null].includes(range[1])) {
-      range[1] = "2999-01-01T00:00:00Z";
+      range[1] = "2999-01-01T00:00:00";
     }
 
     if (range !== undefined)
@@ -391,7 +407,51 @@ const formToStac = (formProduct) => {
 
   stac.properties.platform = formProduct.platform;
   const itemState = formProduct.state || "created";
-  const reviewers = formProduct.platform == "EOX" ? ["eox-cs1"]: formProduct.platform == "rasdaman" ? ["Mohinem"]: []
+  const reviewers =
+    formProduct.platform === "EOX"
+      ? ["eox-cs1"]
+      : formProduct.platform === "rasdaman"
+      ? ["Mohinem"]
+      : [];
+
+  const timeRange =
+    cube.time.extent.length > 2 ? cube.time.extent : cube.time.values;
+  if (formProduct.platform === "rasdaman") {
+    stac.assets = {};
+    let wmsBbox = [stac.bbox[1], stac.bbox[0], stac.bbox[3], stac.bbox[2]];
+    let DataUrl = `https://fairicube.rasdaman.com/rasdaman/ows?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=${formProduct.identifier}&FORMAT=application/netcdf`;
+
+    stac.assets["data"] = {
+      href: DataUrl,
+      roles: ["data"],
+    };
+    let hasNoNullValues =
+      !wmsBbox.includes(undefined) && !wmsBbox.includes(null);
+    if (
+      timeRange !== undefined &&
+      Array.isArray(timeRange) &&
+      hasNoNullValues
+    ) {
+      let ThumbnailUrl = `https://fairicube.rasdaman.com/rasdaman/ows?service=WMS&version=1.3.0&request=GetMap&layers=${stac.id}&bbox=${wmsBbox}&time="${timeRange[0]}"&width=800&height=600&crs=EPSG:4326&format=image/png&transparent=true&styles=`;
+      stac.assets["thumbnail"] = {
+        href: ThumbnailUrl,
+        roles: ["thumbnail"],
+      };
+    }
+
+    stac.links.push({
+      href: `https://fairicube.rasdaman.com/rasdaman/ows?&SERVICE=WCS&VERSION=2.1.0&REQUEST=DescribeCoverage&COVERAGEID=${stac.id}&outputType=GeneralGridCoverage`,
+      rel: "about",
+      type: "text/xml",
+      title: "Link to the coverage description in XML",
+    });
+    stac.links.push({
+      href: `https://fairicube.rasdaman.com/rasdaman-dashboard/?layers=${stac.id}`,
+      rel: "service",
+      type: "text/html",
+      title: "Link to the web application to Access, process gridded data",
+    });
+  }
   return {
     stac: stac,
     state: itemState,
