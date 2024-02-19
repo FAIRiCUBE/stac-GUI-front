@@ -11,7 +11,7 @@
     "analyze": "nuxt build --analyze"
   },
   "devDependencies": {
-    "@nuxt/devtools": "latest",
+    "@nuxt/devtools": "1.0.1",
     "daisyui": "^3.9.4",
     "lazy-load-list": "^1.2.4",
     "nuxt": "^3.8.0",
@@ -23,8 +23,9 @@
     "vuetify": "^3.4.0"
   },
   "dependencies": {
-    "@formkit/icons": "latest",
-    "@formkit/nuxt": "latest",
+    "@formkit/icons": "1.2.2",
+    "@formkit/auto-animate": "0.8.1",
+    "@formkit/nuxt": "1.2.2",
     "@mdi/font": "^7.3.67",
     "iso8601-duration": "^2.1.1",
     "reproject-bbox": "0.12.0"
