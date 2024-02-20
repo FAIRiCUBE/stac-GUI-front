@@ -99,12 +99,12 @@ const cancelBboxModel = () => {
 
 const useGlobeBound = () => {
   showBboxError.value = false;
-  product.value.horizontal_axis.bbox.x[0] = -180;
-  product.value.horizontal_axis.bbox.y[0] = -90;
-  product.value.horizontal_axis.bbox.x[1] = 180;
-  product.value.horizontal_axis.bbox.y[1] = 90;
-  product.value.horizontal_axis.horizontal_crs = 4326;
-  submit(product.value);
+  product.horizontal_axis.bbox.x[0] = -180;
+  product.horizontal_axis.bbox.y[0] = -90;
+  product.horizontal_axis.bbox.x[1] = 180;
+  product.horizontal_axis.bbox.y[1] = 90;
+  product.horizontal_axis.horizontal_crs = 4326;
+  submit(product);
 };
 const identifier_exists = ({ value }) => {
   return new Promise((resolve) => {
@@ -122,10 +122,10 @@ const createLicenses = licenses.licenses.map((license) => {
 });
 async function submit(values) {
   let submittedBbox = [
-    product.value.horizontal_axis.bbox.x[0],
-    product.value.horizontal_axis.bbox.y[0],
-    product.value.horizontal_axis.bbox.x[1],
-    product.value.horizontal_axis.bbox.y[1],
+    values.horizontal_axis.bbox.x[0],
+    values.horizontal_axis.bbox.y[0],
+    values.horizontal_axis.bbox.x[1],
+    values.horizontal_axis.bbox.y[1],
   ];
   let hasNoNullValues =
     !submittedBbox.includes(undefined) && !submittedBbox.includes(null);
