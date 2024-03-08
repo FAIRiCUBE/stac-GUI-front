@@ -601,6 +601,12 @@ async function submit(values) {
           </div>
         </FormKit>
         <FormKit
+            type="text"
+            name="values"
+            label="Vertical axis values"
+            v-if="!product.vertical_axis.regular"
+          />
+        <FormKit
           type="text"
           name="unit_of_measure"
           label="Unit of Measure"

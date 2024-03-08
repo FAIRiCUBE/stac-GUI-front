@@ -273,7 +273,10 @@ const formToStac = (formProduct) => {
     : (v_axis.values = formProduct.horizontal_axis.y_values);
 
   h_axis.reference_system = formProduct.horizontal_axis.horizontal_crs;
+  v_axis.reference_system = formProduct.horizontal_axis.horizontal_crs;
   h_axis.unit_of_measure = formProduct.horizontal_axis.unit_of_measure;
+  v_axis.unit_of_measure = formProduct.horizontal_axis.unit_of_measure;
+  v_axis.interpolation = formProduct.horizontal_axis.interpolation;
   h_axis.interpolation = formProduct.horizontal_axis.interpolation;
   h_axis.step = formProduct.horizontal_axis.x_resolution;
   v_axis.step = formProduct.horizontal_axis.y_resolution;
@@ -286,7 +289,9 @@ const formToStac = (formProduct) => {
   z_axis.unit_of_measure = formProduct.vertical_axis.unit_of_measure;
   z_axis.interpolation = formProduct.vertical_axis.interpolation;
   z_axis.step = formProduct.vertical_axis.resolution;
-  z_axis.type = "spatial";
+  if (z_axis.extent !== undefined || z_axis.extent !== undefined)  {
+    z_axis.type = "spatial";
+  }
 
   formProduct.other_dims.map((dim) => {
     cube[dim.name] = {
@@ -321,10 +326,13 @@ const formToStac = (formProduct) => {
         }))
       : (stac.bbox = edges);
     stac.geometry.coordinates = [
+      [
       [stac.bbox[0], stac.bbox[1]],
       [stac.bbox[0], stac.bbox[3]],
       [stac.bbox[2], stac.bbox[3]],
       [stac.bbox[2], stac.bbox[1]],
+      [stac.bbox[0], stac.bbox[1]],
+      ]
     ];
   }
 
@@ -338,12 +346,15 @@ const formToStac = (formProduct) => {
       range[1] = "2999-01-01T00:00:00";
     }
 
-    if (range !== undefined)
+    if (range !== undefined){
       range = range.map((time) =>
-        ![undefined, null].includes(time) && typeof time === "string"
-          ? (time = `${time}Z`)
-          : time
-      );
+      ![undefined, null].includes(time) && typeof time === "string"
+        ? (time = `${time}Z`)
+        : time
+    );
+    stac.properties.start_datetime = range[0]
+    stac.properties.end_datetime = range[range.length -1]
+    }
 
     let dates = "P";
     let hasDates = false;
