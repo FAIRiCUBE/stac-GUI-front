@@ -170,7 +170,7 @@ const stacToForm = (stac) => {
 const formToStac = (formProduct) => {
   let stac = {
     type: "Feature",
-    stac_version: "2.2.0",
+    stac_version: "1.0.0",
     id: "",
     properties: {
       license: "",
@@ -342,8 +342,13 @@ const formToStac = (formProduct) => {
       Array.isArray(formProduct.time_axis.bbox)
         ? formProduct.time_axis.bbox
         : formProduct.time_axis.values;
-    if (range && Array.isArray(range) && [undefined, null].includes(range[1])) {
-      range[1] = "2999-01-01T00:00:00";
+    if (range && Array.isArray(range)){
+      if( [undefined, null, ""].includes(range[1])) {
+        range[1] = "2999-01-01T00:00:00";
+      }
+      if( [undefined, null, ""].includes(range[0])) {
+        range[0] = "1900-01-01T00:00:00";
+      }
     }
 
     if (range !== undefined){
@@ -423,19 +428,14 @@ const formToStac = (formProduct) => {
       ? ["eox-cs1"]
       : formProduct.platform === "rasdaman"
       ? ["Mohinem"]
-      : [];
+      : ["rasdaman", "both"].includes(formProduct.platform)?
+      ["Mohinem", "eox-cs1"]
+      :[];
 
   const timeRange =
-    cube.time.extent.length > 2 ? cube.time.extent : cube.time.values;
-  if (formProduct.platform === "rasdaman") {
-    stac.assets = {};
+    cube.time.extent.length === 2 ? cube.time.extent : cube.time.values;
+  if (["rasdaman", "both"].includes(formProduct.platform)) {
     let wmsBbox = [stac.bbox[1], stac.bbox[0], stac.bbox[3], stac.bbox[2]];
-    let DataUrl = `https://fairicube.rasdaman.com/rasdaman/ows?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=${formProduct.identifier}&FORMAT=application/netcdf`;
-
-    stac.assets["data"] = {
-      href: DataUrl,
-      roles: ["data"],
-    };
     let hasNoNullValues =
       !wmsBbox.includes(undefined) && !wmsBbox.includes(null);
     if (
@@ -443,24 +443,24 @@ const formToStac = (formProduct) => {
       Array.isArray(timeRange) &&
       hasNoNullValues
     ) {
-      let ThumbnailUrl = `https://fairicube.rasdaman.com/rasdaman/ows?service=WMS&version=1.3.0&request=GetMap&layers=${stac.id}&bbox=${wmsBbox}&time="${timeRange[0]}"&width=800&height=600&crs=EPSG:4326&format=image/png&transparent=true&styles=`;
-      stac.assets["thumbnail"] = {
+      let ThumbnailUrl = `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman/ows?service=WMS&version=1.3.0&request=GetMap&layers=${stac.id}&bbox=${wmsBbox}&time="${timeRange[0]}"&width=800&height=600&crs=EPSG:4326&format=image/png&transparent=true&styles=`;
+      stac.assets["thumbnail_rasdaman"] = {
         href: ThumbnailUrl,
         roles: ["thumbnail"],
       };
     }
 
     stac.links.push({
-      href: `https://fairicube.rasdaman.com/rasdaman/ows?&SERVICE=WCS&VERSION=2.1.0&REQUEST=DescribeCoverage&COVERAGEID=${stac.id}&outputType=GeneralGridCoverage`,
+      href: `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman/ows?&SERVICE=WCS&VERSION=2.1.0&REQUEST=DescribeCoverage&COVERAGEID=${stac.id}&outputType=GeneralGridCoverage`,
       rel: "about",
       type: "text/xml",
-      title: "Link to the coverage description in XML",
+      title: "Link to the rasdaman coverage description in XML",
     });
     stac.links.push({
-      href: `https://fairicube.rasdaman.com/rasdaman-dashboard/?layers=${stac.id}`,
+      href: `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman-dashboard/?layers=${stac.id}`,
       rel: "service",
       type: "text/html",
-      title: "Link to the web application to Access, process gridded data",
+      title: "Link to the rasdaman web application to Access, process gridded data",
     });
   }
   return {

@@ -65,7 +65,17 @@ const editForm = async (item) => {
   showList.value = false;
 };
 const createForm = () => {
-  product = ref({});
+  product = ref({
+    horizontal_axis: {
+      regular: true,
+    },
+    vertical_axis: {
+      regular: true,
+    },
+    time_axis: {
+      regular: true,
+    },
+  });
   stacIsNew.value = true;
   showForm.value = true;
   showList.value = false;
@@ -97,14 +107,14 @@ const cancelBboxModel = () => {
   showBboxError.value = false;
 };
 
-const useGlobeBound = () => {
+const useGlobeBound = (values) => {
   showBboxError.value = false;
-  product.horizontal_axis.bbox.x[0] = -180;
-  product.horizontal_axis.bbox.y[0] = -90;
-  product.horizontal_axis.bbox.x[1] = 180;
-  product.horizontal_axis.bbox.y[1] = 90;
-  product.horizontal_axis.horizontal_crs = 4326;
-  submit(product);
+  product.value.horizontal_axis.bbox.x[0] = -180;
+  product.value.horizontal_axis.bbox.y[0] = -90;
+  product.value.horizontal_axis.bbox.x[1] = 180;
+  product.value.horizontal_axis.bbox.y[1] = 90;
+  product.value.horizontal_axis.horizontal_crs = 4326;
+  submit(product.value);
 };
 const identifier_exists = ({ value }) => {
   return new Promise((resolve) => {
@@ -121,17 +131,22 @@ const createLicenses = licenses.licenses.map((license) => {
   licensesData.push({ label: license.name, value: license.licenseId });
 });
 async function submit(values) {
-  let submittedBbox = [
-    values.horizontal_axis.bbox.x[0],
-    values.horizontal_axis.bbox.y[0],
-    values.horizontal_axis.bbox.x[1],
-    values.horizontal_axis.bbox.y[1],
-  ];
-  let hasNoNullValues =
-    !submittedBbox.includes(undefined) && !submittedBbox.includes(null);
-  if (!hasNoNullValues) {
-    showBboxError.value = true;
-    return;
+  if (values.horizontal_axis.regular) {
+    if (values.horizontal_axis.bbox === undefined) {
+      values.horizontal_axis.bbox = { x: [null, null], y: [null, null] };
+    }
+    let submittedBbox = [
+      values.horizontal_axis.bbox.x[0],
+      values.horizontal_axis.bbox.y[0],
+      values.horizontal_axis.bbox.x[1],
+      values.horizontal_axis.bbox.y[1],
+    ];
+    let hasNoNullValues =
+      !submittedBbox.includes(undefined) && !submittedBbox.includes(null);
+    if (!hasNoNullValues) {
+      showBboxError.value = true;
+      return;
+    }
   }
 
   const submitStac = formToStac(values);
@@ -173,7 +188,7 @@ async function submit(values) {
       <img
         class="check"
         src="~/assets/img/check.png"
-        style="max-width;: 50% !important"
+        style="max-width: 50% !important"
         alt=""
       />
       <p>Successfully submitted STAC data</p>
@@ -195,9 +210,8 @@ async function submit(values) {
       />
       <h6>WARNING</h6>
       <p>
-        Projection error!, please check input bbox values. by clicking
-        continue, Global world bounds in WGS84 will be used in the generated
-        STAC item.
+        Projection error!, please check input bbox values. by clicking continue,
+        Global world bounds in WGS84 will be used in the generated STAC item.
       </p>
       <div style="display: flex">
         <FormKit
@@ -323,7 +337,7 @@ async function submit(values) {
         :options="{
           eox: 'EOX',
           rasdaman: 'rasdaman',
-          other: 'Other',
+          both: 'Both',
         }"
         validation="required"
       />
@@ -488,7 +502,7 @@ async function submit(values) {
         />
         <FormKit type="checkbox" name="regular" label="regular ?" />
         <FormKit type="group" name="bbox">
-          <FormKit type="list" name="x" v-if="product.horizontal_axis.regular">
+          <FormKit type="list" name="x">
             <div class="bbox">
               <h4 class="title" style="padding: 0.5em">BBOX</h4>
               <br />
@@ -510,13 +524,7 @@ async function submit(values) {
               />
             </div>
           </FormKit>
-          <FormKit
-            type="text"
-            name="x_values"
-            label="X values"
-            v-if="!product.horizontal_axis.regular"
-          />
-          <FormKit type="list" name="y" v-if="product.horizontal_axis.regular">
+          <FormKit type="list" name="y">
             <div class="bbox">
               <h4 class="title" style="padding: 0.5em">BBOX</h4>
               <br />
@@ -538,6 +546,12 @@ async function submit(values) {
               />
             </div>
           </FormKit>
+          <FormKit
+            type="text"
+            name="x_values"
+            label="X values"
+            v-if="!product.horizontal_axis.regular"
+          />
           <FormKit
             type="text"
             name="y_values"
@@ -601,11 +615,11 @@ async function submit(values) {
           </div>
         </FormKit>
         <FormKit
-            type="text"
-            name="values"
-            label="Vertical axis values"
-            v-if="!product.vertical_axis.regular"
-          />
+          type="text"
+          name="values"
+          label="Vertical axis values"
+          v-if="!product.vertical_axis.regular"
+        />
         <FormKit
           type="text"
           name="unit_of_measure"
