@@ -44,15 +44,18 @@ const showBackModal = ref(false);
 const showBboxError = ref(false);
 const showForm = ref(false);
 const editForm = async (item) => {
-  const itemData = await useFetch(`/api/item-requests/${item.name}`, {
-    method: "POST",
-    body: JSON.stringify({ item }),
-    headers: {
-      "content-type": "application/json",
-      "x-user": owner,
-      "x-FairicubeOwner": true,
-    },
-  });
+  const itemData = await useFetch(
+    `/api/item-requests/${item.name}`,
+    {
+      method: "POST",
+      body: JSON.stringify({ item }),
+      headers: {
+        "content-type": "application/json",
+        "x-user": owner,
+        "x-FairicubeOwner": true,
+      },
+    }
+  );
   const stacData = itemData.data._rawValue.stac;
   product = stacToForm(stacData);
   product.members = members;
@@ -106,12 +109,14 @@ const cancelBboxModel = () => {
 
 const useGlobeBound = (values) => {
   showBboxError.value = false;
-  product.value.horizontal_axis.bbox.x[0] = -180;
-  product.value.horizontal_axis.bbox.y[0] = -90;
-  product.value.horizontal_axis.bbox.x[1] = 180;
-  product.value.horizontal_axis.bbox.y[1] = 90;
-  product.value.horizontal_axis.horizontal_crs = 4326;
-  submit(product.value);
+  let formItems =
+    product.value && typeof product.value == "object" ? product.value : product;
+  formItems.horizontal_axis.bbox.x[0] = -180;
+  formItems.horizontal_axis.bbox.y[0] = -90;
+  formItems.horizontal_axis.bbox.x[1] = 180;
+  formItems.horizontal_axis.bbox.y[1] = 90;
+  formItems.horizontal_axis.horizontal_crs = 4326;
+  submit(formItems);
 };
 const identifier_exists = ({ value }) => {
   return new Promise((resolve) => {
@@ -387,7 +392,7 @@ async function submit(values) {
         dynamic
         #default="{ items, node, value }"
         name="assets"
-        v-if="product.platform !== 'rasdaman'"
+        v-if="product.platform !== 'Rasdaman'"
       >
         <h2 class="title">Assets</h2>
         <FormKit
@@ -1049,7 +1054,7 @@ async function submit(values) {
         dynamic
         #default="{ items, node, value }"
         name="thumbnails"
-        v-if="product.platform !== 'rasdaman'"
+        v-if="product.platform !== 'Rasdaman'"
       >
         <h2 class="title">Thumbnails</h2>
         <FormKit

@@ -183,8 +183,9 @@ const stacToForm = (stac) => {
   formProduct.use_case_NHM = stac.properties.use_case_NHM;
   formProduct.use_case_NILU = stac.properties.use_case_NILU;
   formProduct.use_case_NHM_2 = stac.properties.use_case_NHM_2;
+  formProduct.ingestion_status = stac.properties.ingestion_status;
 
-  formProduct.platform = stac.properties.platform || ["other"];
+  formProduct.platform = stac.properties.platform;
   formProduct.state = "edited";
   return formProduct;
 };
@@ -471,11 +472,12 @@ const formToStac = (formProduct) => {
   stac.properties.use_case_NHM = formProduct.use_case_NHM;
   stac.properties.use_case_NILU = formProduct.use_case_NILU;
   stac.properties.use_case_NHM_2 = formProduct.use_case_NHM_2;
+  stac.properties.ingestion_status = formProduct.ingestion_status;
 
   stac.properties.platform = formProduct.platform;
   const itemState = formProduct.state || "created";
   const reviewers =
-    formProduct.platform === "EOX"
+    formProduct.platform === "Eox"
       ? ["eox-cs1"]
       : formProduct.platform === "Rasdaman"
       ? ["Mohinem"]
