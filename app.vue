@@ -44,18 +44,15 @@ const showBackModal = ref(false);
 const showBboxError = ref(false);
 const showForm = ref(false);
 const editForm = async (item) => {
-  const itemData = await useFetch(
-    `/api/item-requests/${item.name}`,
-    {
-      method: "POST",
-      body: JSON.stringify({ item }),
-      headers: {
-        "content-type": "application/json",
-        "x-user": owner,
-        "x-FairicubeOwner": true,
-      },
-    }
-  );
+  const itemData = await useFetch(`/api/item-requests/${item.name}`, {
+    method: "POST",
+    body: JSON.stringify({ item }),
+    headers: {
+      "content-type": "application/json",
+      "x-user": owner,
+      "x-FairicubeOwner": true,
+    },
+  });
   const stacData = itemData.data._rawValue.stac;
   product = stacToForm(stacData);
   product.members = members;
@@ -335,9 +332,9 @@ async function submit(values) {
         name="platform"
         label="Target Platform"
         :options="{
-          eox: 'EOX',
-          rasdaman: 'rasdaman',
-          both: 'Both',
+          Eox: 'EOX',
+          Rasdaman: 'rasdaman',
+          Both: 'Both',
         }"
         validation="required"
       />
@@ -378,6 +375,12 @@ async function submit(values) {
       />
       <FormKit type="group" name="general">
         <FormKit type="text" name="area_cover" label="total area cover" />
+        <FormKit
+          type="text"
+          name="crs"
+          help="reference system number in EPSG format e.g(4326)"
+          label="CRS"
+        />
       </FormKit>
       <FormKit
         type="list"
@@ -901,6 +904,7 @@ async function submit(values) {
             <FormKit type="textarea" name="description" label="Description" />
             <FormKit type="text" name="category_list" label="Category List" />
             <FormKit type="textarea" name="comment" label="Comment" />
+            <FormKit type="text" name="interpolation" label="Interpolation" />
 
             <FormKit
               type="button"
@@ -943,8 +947,33 @@ async function submit(values) {
       </FormKit>
       <h2 class="title">Keywords</h2>
       <FormKit type="text" name="keywords" label="Keywords" />
-      <h2 class="title">Provenance name</h2>
-      <FormKit type="text" name="Provenance_name" label="Provenance name" />
+      <h2 class="title">Provenance</h2>
+      <FormKit type="text" name="Provenance_name" label="Origin" />
+      <FormKit
+        type="text"
+        name="documentation"
+        label="Documents & publications"
+      />
+      <FormKit
+        type="text"
+        name="preprocessing"
+        label="Preprocessing (description)"
+      />
+      <FormKit type="url" name="source_data" label="Source Data (links)" />
+      <FormKit type="url" name="models" label="Models (Links)" />
+      <h2 class="title">Data Quality</h2>
+      <FormKit type="text" name="data_quality" label="Data Quality" />
+      <FormKit type="text" name="quality_control" label="Quality control" />
+      <h2 class="title">Accessibility</h2>
+      <FormKit
+        type="text"
+        name="metada_standards"
+        label="(Meta)data standers"
+      />
+      <FormKit type="text" name="apis" label="APIs" />
+      <FormKit type="text" name="distributions" label="Distributions" />
+      <FormKit type="text" name="access_control" label="Access control" />
+
       <h2 class="title">Dates</h2>
       <FormKit
         type="datetime-local"
@@ -952,14 +981,26 @@ async function submit(values) {
         label="Creation"
         name="datetime"
       />
+      <FormKit
+        type="datetime-local"
+        step="1"
+        label="Provision"
+        name="provision"
+      />
+      <FormKit
+        type="datetime-local"
+        step="1"
+        label="Modification"
+        name="modification"
+      />
       <h2 class="title">Internal</h2>
       <FormKit
         type="radio"
         name="use_case_S4E"
         label="Priority (Climate change (S4E))"
         :options="{
-          one: 'One',
-          two: 'Two',
+          1: 'One',
+          2: 'Two',
         }"
       />
       <FormKit
@@ -967,8 +1008,8 @@ async function submit(values) {
         name="use_case_WER"
         label="Biodiversity & agri (WER)"
         :options="{
-          one: 'One',
-          two: 'Two',
+          1: 'One',
+          2: 'Two',
         }"
       />
       <FormKit
@@ -976,8 +1017,8 @@ async function submit(values) {
         name="use_case_NHM"
         label="Biodiversity occurrence cubes (NHM)"
         :options="{
-          one: 'One',
-          two: 'Two',
+          1: 'One',
+          2: 'Two',
         }"
       />
       <FormKit
@@ -985,8 +1026,17 @@ async function submit(values) {
         name="use_case_NILU"
         label="Neighbourhood building stock (NILU)"
         :options="{
-          one: 'One',
-          two: 'Two',
+          1: 'One',
+          2: 'Two',
+        }"
+      />
+      <FormKit
+        type="radio"
+        name="use_case_NHM_2"
+        label="Drosophila Genetics (NHM)"
+        :options="{
+          1: 'One',
+          2: 'Two',
         }"
       />
       <FormKit

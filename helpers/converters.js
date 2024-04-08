@@ -54,7 +54,9 @@ const stacToForm = (stac) => {
   formProduct.datasource_type = stac.properties.datasource_type;
   formProduct.description = stac.properties.description;
   formProduct.keywords = stac.properties.keywords;
+  formProduct.documentation = stac.properties.documentation;
   formProduct.general.area_cover = stac.properties.area_cover;
+  formProduct.general.crs = stac.properties.crs;
   const cube = stac.properties["cube:dimensions"];
   const h_axis = cube.x || null;
   const v_axis = cube.y || null;
@@ -101,11 +103,13 @@ const stacToForm = (stac) => {
     timeDim.extent.length === 2
       ? timeDim.extent
       : timeDim.values;
-  range = range.map((time) =>
-    ![undefined, null].includes(time) && typeof time === "string"
-      ? time.replace("Z", "")
-      : time
-  );
+  range =
+    range &&
+    range.map((time) =>
+      ![undefined, null].includes(time) && typeof time === "string"
+        ? time.replace("Z", "")
+        : time
+    );
   if (
     timeDim.extent &&
     Array.isArray(timeDim.extent) &&
@@ -141,6 +145,7 @@ const stacToForm = (stac) => {
         description: band.description,
         category_list: band.category_list,
         comment: band.comment,
+        interpolation: band.interpolation,
       });
     });
 
@@ -153,6 +158,22 @@ const stacToForm = (stac) => {
   formProduct.legal.license = stac.properties.license;
   formProduct.legal.personalData = stac.properties.personalData;
   formProduct.Provenance_name = stac.properties.Provenance_name;
+  formProduct.preprocessing = stac.properties.preprocessing;
+  formProduct.source_data = stac.properties.source_data;
+  formProduct.models = stac.properties.models;
+  formProduct.data_quality = stac.properties.data_quality;
+  formProduct.quality_control = stac.properties.quality_control;
+  formProduct.metada_standards = stac.properties.metada_standards;
+  formProduct.apis = stac.properties.apis;
+  formProduct.distributions = stac.properties.distributions;
+  formProduct.access_control = stac.properties.access_control;
+
+  formProduct.provision = stac.properties.provision
+    ? stac.properties.provision.replace("Z", "")
+    : null;
+  formProduct.modification = stac.properties.modification
+    ? stac.properties.modification.replace("Z", "")
+    : null;
   formProduct.datetime = stac.properties.datetime
     ? stac.properties.datetime.replace("Z", "")
     : null;
@@ -161,6 +182,7 @@ const stacToForm = (stac) => {
   formProduct.use_case_WER = stac.properties.use_case_WER;
   formProduct.use_case_NHM = stac.properties.use_case_NHM;
   formProduct.use_case_NILU = stac.properties.use_case_NILU;
+  formProduct.use_case_NHM_2 = stac.properties.use_case_NHM_2;
 
   formProduct.platform = stac.properties.platform || ["other"];
   formProduct.state = "edited";
@@ -258,6 +280,8 @@ const formToStac = (formProduct) => {
   stac.properties.description = formProduct.description;
   stac.properties.keywords = formProduct.keywords;
   stac.properties.area_cover = formProduct.general.area_cover;
+  stac.properties.documentation = formProduct.documentation;
+  stac.properties.crs = formProduct.general.crs;
   const cube = stac.properties["cube:dimensions"];
   const h_axis = cube.x || null;
   const v_axis = cube.y || null;
@@ -289,7 +313,7 @@ const formToStac = (formProduct) => {
   z_axis.unit_of_measure = formProduct.vertical_axis.unit_of_measure;
   z_axis.interpolation = formProduct.vertical_axis.interpolation;
   z_axis.step = formProduct.vertical_axis.resolution;
-  if (z_axis.extent !== undefined || z_axis.extent !== undefined)  {
+  if (z_axis.extent !== undefined || z_axis.extent !== undefined) {
     z_axis.type = "spatial";
   }
 
@@ -316,23 +340,28 @@ const formToStac = (formProduct) => {
             formProduct.horizontal_axis.bbox.y[1],
           ]
         : [];
-
-    formProduct.horizontal_axis.horizontal_crs !== 4326 &&
-    formProduct.horizontal_axis.horizontal_crs !== undefined
+    let bbox_crs = formProduct.horizontal_axis.horizontal_crs;
+    if (
+      typeof bbox_crs === "string" &&
+      bbox_crs.toLowerCase().startsWith("epsg:")
+    ) {
+      bbox_crs = bbox_crs.split(":")[1];
+    }
+    ![NaN, 4326, undefined].includes(bbox_crs)
       ? (stac.bbox = reprojectBoundingBox({
           bbox: edges,
-          from: Number(formProduct.horizontal_axis.horizontal_crs),
+          from: Number(bbox_crs),
           to: 4326,
         }))
       : (stac.bbox = edges);
     stac.geometry.coordinates = [
       [
-      [stac.bbox[0], stac.bbox[1]],
-      [stac.bbox[0], stac.bbox[3]],
-      [stac.bbox[2], stac.bbox[3]],
-      [stac.bbox[2], stac.bbox[1]],
-      [stac.bbox[0], stac.bbox[1]],
-      ]
+        [stac.bbox[0], stac.bbox[1]],
+        [stac.bbox[0], stac.bbox[3]],
+        [stac.bbox[2], stac.bbox[3]],
+        [stac.bbox[2], stac.bbox[1]],
+        [stac.bbox[0], stac.bbox[1]],
+      ],
     ];
   }
 
@@ -342,23 +371,23 @@ const formToStac = (formProduct) => {
       Array.isArray(formProduct.time_axis.bbox)
         ? formProduct.time_axis.bbox
         : formProduct.time_axis.values;
-    if (range && Array.isArray(range)){
-      if( [undefined, null, ""].includes(range[1])) {
+    if (range && Array.isArray(range)) {
+      if ([undefined, null, ""].includes(range[1])) {
         range[1] = "2999-01-01T00:00:00";
       }
-      if( [undefined, null, ""].includes(range[0])) {
+      if ([undefined, null, ""].includes(range[0])) {
         range[0] = "1900-01-01T00:00:00";
       }
     }
 
-    if (range !== undefined){
+    if (range !== undefined) {
       range = range.map((time) =>
-      ![undefined, null].includes(time) && typeof time === "string"
-        ? (time = `${time}Z`)
-        : time
-    );
-    stac.properties.start_datetime = range[0]
-    stac.properties.end_datetime = range[range.length -1]
+        ![undefined, null].includes(time) && typeof time === "string"
+          ? (time = `${time}Z`)
+          : time
+      );
+      stac.properties.start_datetime = range[0];
+      stac.properties.end_datetime = range[range.length - 1];
     }
 
     let dates = "P";
@@ -398,6 +427,7 @@ const formToStac = (formProduct) => {
         description: band.description,
         category_list: band.category_list,
         comment: band.comment,
+        interpolation: band.interpolation,
       });
     });
 
@@ -410,31 +440,52 @@ const formToStac = (formProduct) => {
   stac.properties.license = formProduct.legal.license;
   stac.properties.personalData = formProduct.legal.personalData;
   stac.properties.Provenance_name = formProduct.Provenance_name;
+  stac.properties.preprocessing = formProduct.preprocessing;
+  stac.properties.source_data = formProduct.source_data;
+  stac.properties.models = formProduct.models;
+  stac.properties.data_quality = formProduct.data_quality;
+  stac.properties.quality_control = formProduct.quality_control;
+  stac.properties.metada_standards = formProduct.metada_standards;
+  stac.properties.apis = formProduct.apis;
+  stac.properties.distributions = formProduct.distributions;
+  stac.properties.access_control = formProduct.access_control;
+
   let productTime = formProduct.datetime;
   stac.properties.datetime =
     ![undefined, null].includes(productTime) && typeof productTime === "string"
       ? (productTime = `${productTime}Z`)
       : productTime;
+  stac.properties.modification =
+    ![undefined, null].includes(formProduct.modification) &&
+    typeof formProduct.modification === "string"
+      ? (formProduct.modification = `${formProduct.modification}Z`)
+      : formProduct.modification;
+  stac.properties.provision =
+    ![undefined, null].includes(formProduct.provision) &&
+    typeof formProduct.provision === "string"
+      ? (formProduct.provision = `${formProduct.provision}Z`)
+      : formProduct.provision;
 
   stac.properties.use_case_S4E = formProduct.use_case_S4E;
   stac.properties.use_case_WER = formProduct.use_case_WER;
   stac.properties.use_case_NHM = formProduct.use_case_NHM;
   stac.properties.use_case_NILU = formProduct.use_case_NILU;
+  stac.properties.use_case_NHM_2 = formProduct.use_case_NHM_2;
 
   stac.properties.platform = formProduct.platform;
   const itemState = formProduct.state || "created";
   const reviewers =
     formProduct.platform === "EOX"
       ? ["eox-cs1"]
-      : formProduct.platform === "rasdaman"
+      : formProduct.platform === "Rasdaman"
       ? ["Mohinem"]
-      : ["rasdaman", "both"].includes(formProduct.platform)?
-      ["Mohinem", "eox-cs1"]
-      :[];
+      : ["Rasdaman", "Both"].includes(formProduct.platform)
+      ? ["Mohinem", "eox-cs1"]
+      : [];
 
   const timeRange =
     cube.time.extent.length === 2 ? cube.time.extent : cube.time.values;
-  if (["rasdaman", "both"].includes(formProduct.platform)) {
+  if (["Rasdaman", "Both"].includes(formProduct.platform)) {
     let wmsBbox = [stac.bbox[1], stac.bbox[0], stac.bbox[3], stac.bbox[2]];
     let hasNoNullValues =
       !wmsBbox.includes(undefined) && !wmsBbox.includes(null);
@@ -460,7 +511,8 @@ const formToStac = (formProduct) => {
       href: `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman-dashboard/?layers=${stac.id}`,
       rel: "service",
       type: "text/html",
-      title: "Link to the rasdaman web application to Access, process gridded data",
+      title:
+        "Link to the rasdaman web application to Access, process gridded data",
     });
   }
   return {
