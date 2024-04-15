@@ -39,12 +39,12 @@ const stacToForm = (stac) => {
   });
   stac.properties.providers.map((provider) => {
     let providerObject = {
-      organization_name: provider.name,
+      organization_name: provider.organization_name,
       organization: provider.organization,
-      comments: provider.description,
-      doc_link: provider.url,
-      organization_email: provider.email,
-      ORCID_ID: provider.orcid_id,
+      comments: provider.comments,
+      doc_link: provider.doc_link,
+      organization_email: provider.organization_email,
+      ORCID_ID: provider.ORCID_ID,
       project_purpose: provider.project_purpose,
     };
     formProduct.providers.push(providerObject);
@@ -52,6 +52,7 @@ const stacToForm = (stac) => {
   formProduct.identifier = stac.id;
   formProduct.title = stac.properties.title;
   formProduct.datasource_type = stac.properties.datasource_type;
+  formProduct.dataSource = stac.properties.dataSource;
   formProduct.description = stac.properties.description;
   formProduct.keywords = stac.properties.keywords;
   formProduct.documentation = stac.properties.documentation;
@@ -137,7 +138,7 @@ const stacToForm = (stac) => {
   if (bands !== undefined && Array.isArray(bands))
     bands.map((band) => {
       formProduct.bands.push({
-        band_name: band.name,
+        band_name: band.band_name,
         unit: band.unit,
         data_type: band.data_type,
         nodata: band.nodata,
@@ -250,12 +251,12 @@ const formToStac = (formProduct) => {
 
   formProduct.providers.map((provider) => {
     let providerObject = {
-      name: provider.organization_name,
+      organization_name: provider.organization_name,
       organization: provider.organization,
-      description: provider.comments,
-      url: provider.doc_link,
-      email: provider.organization_email,
-      orcid_id: provider.ORCID_ID,
+      comments: provider.comments,
+      doc_link: provider.doc_link,
+      organization_email: provider.organization_email,
+      ORCID_ID: provider.ORCID_ID,
       project_purpose: provider.project_purpose,
     };
     stac.properties.providers.push(providerObject);
@@ -278,6 +279,7 @@ const formToStac = (formProduct) => {
   stac.id = formProduct.identifier;
   stac.properties.title = formProduct.title;
   stac.properties.datasource_type = formProduct.datasource_type;
+  stac.properties.dataSource = formProduct.dataSource;
   stac.properties.description = formProduct.description;
   stac.properties.keywords = formProduct.keywords;
   stac.properties.area_cover = formProduct.general.area_cover;
@@ -420,7 +422,7 @@ const formToStac = (formProduct) => {
   if (bands !== undefined && Array.isArray(bands))
     bands.map((band) => {
       stac.properties["raster:bands"].push({
-        name: band.band_name,
+        band_name: band.band_name,
         unit: band.unit,
         data_type: band.data_type,
         nodata: band.nodata,
@@ -481,12 +483,16 @@ const formToStac = (formProduct) => {
       ? ["eox-cs1"]
       : formProduct.platform === "Rasdaman"
       ? ["Mohinem"]
-      : ["Rasdaman", "Both"].includes(formProduct.platform)
+      : formProduct.platform === "Both"
       ? ["Mohinem", "eox-cs1"]
       : [];
 
   const timeRange =
     cube.time.extent.length === 2 ? cube.time.extent : cube.time.values;
+  const hasNoRasdamanLinks = (links)=>{
+    const remain = links.filter(link=> ["Link to the rasdaman coverage description in XML", "Link to the rasdaman web application to Access, process gridded data"].includes(link.title))
+    return remain.length !== 2
+  }
   if (["Rasdaman", "Both"].includes(formProduct.platform)) {
     let wmsBbox = [stac.bbox[1], stac.bbox[0], stac.bbox[3], stac.bbox[2]];
     let hasNoNullValues =
@@ -502,20 +508,22 @@ const formToStac = (formProduct) => {
         roles: ["thumbnail"],
       };
     }
+    if (hasNoRasdamanLinks(stac.links)){
+      stac.links.push({
+        href: `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman/ows?&SERVICE=WCS&VERSION=2.1.0&REQUEST=DescribeCoverage&COVERAGEID=${stac.id}&outputType=GeneralGridCoverage`,
+        rel: "about",
+        type: "text/xml",
+        title: "Link to the rasdaman coverage description in XML",
+      });
+      stac.links.push({
+        href: `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman-dashboard/?layers=${stac.id}`,
+        rel: "service",
+        type: "text/html",
+        title:
+          "Link to the rasdaman web application to Access, process gridded data",
+      });
+    }
 
-    stac.links.push({
-      href: `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman/ows?&SERVICE=WCS&VERSION=2.1.0&REQUEST=DescribeCoverage&COVERAGEID=${stac.id}&outputType=GeneralGridCoverage`,
-      rel: "about",
-      type: "text/xml",
-      title: "Link to the rasdaman coverage description in XML",
-    });
-    stac.links.push({
-      href: `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman-dashboard/?layers=${stac.id}`,
-      rel: "service",
-      type: "text/html",
-      title:
-        "Link to the rasdaman web application to Access, process gridded data",
-    });
   }
   return {
     stac: stac,

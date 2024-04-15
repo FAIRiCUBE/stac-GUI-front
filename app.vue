@@ -374,6 +374,11 @@ async function submit(values) {
       />
       <FormKit
         type="text"
+        name="dataSource"
+        label="Data Source"
+      />
+      <FormKit
+        type="text"
         name="datasource_type"
         label="Source Type"
         help="The data source type"
