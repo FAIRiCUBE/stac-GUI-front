@@ -67,7 +67,7 @@ const stacToForm = (stac) => {
   formProduct.horizontal_axis.bbox.y = v_axis.extent;
   formProduct.horizontal_axis.bbox.y_values = v_axis.values;
   formProduct.horizontal_axis.horizontal_crs = h_axis.reference_system;
-  formProduct.horizontal_axis.unit_of_measure = h_axis.unit_of_measure;
+  formProduct.horizontal_axis.unit_of_measure = h_axis.unit;
   formProduct.horizontal_axis.interpolation = h_axis.interpolation;
   formProduct.horizontal_axis.x_resolution = h_axis.step;
   formProduct.horizontal_axis.y_resolution = v_axis.step;
@@ -76,7 +76,7 @@ const stacToForm = (stac) => {
     formProduct.vertical_axis.bbox = z_axis.extent || [];
     formProduct.vertical_axis.values = z_axis.values || [];
     formProduct.vertical_axis.vertical_crs = z_axis.reference_system;
-    formProduct.vertical_axis.unit_of_measure = z_axis.unit_of_measure;
+    formProduct.vertical_axis.unit_of_measure = z_axis.unit;
     formProduct.vertical_axis.interpolation = z_axis.interpolation;
     formProduct.vertical_axis.resolution = z_axis.step;
     formProduct.vertical_axis.regular = z_axis.values === undefined;
@@ -90,7 +90,7 @@ const stacToForm = (stac) => {
         bbox: Array.isArray(cube[dim].extent) ? cube[dim].extent : [],
         values: cube[dim].values,
         reference_system: cube[dim].reference_system,
-        unit_of_measure: cube[dim].unit_of_measure,
+        unit_of_measure: cube[dim].unit,
         interpolation: cube[dim].interpolation,
         resolution: cube[dim].step,
         regular: cube[dim].values === undefined,
@@ -153,12 +153,12 @@ const stacToForm = (stac) => {
   formProduct.reprojection_axis.re_projection_crs =
     stac.properties.re_projection_crs;
   formProduct.reprojection_axis.unit_of_measure =
-    stac.properties.unit_of_measure;
+    stac.properties.unit;
   formProduct.reprojection_axis.resolution = stac.properties.resolution;
 
   formProduct.legal.license = stac.properties.license;
   formProduct.legal.personalData = stac.properties.personalData;
-  formProduct.Provenance_name = stac.properties.Provenance_name;
+  formProduct.provenance_name = stac.properties.provenance_name;
   formProduct.preprocessing = stac.properties.preprocessing;
   formProduct.source_data = stac.properties.source_data;
   formProduct.models = stac.properties.models;
@@ -301,8 +301,8 @@ const formToStac = (formProduct) => {
 
   h_axis.reference_system = formProduct.horizontal_axis.horizontal_crs;
   v_axis.reference_system = formProduct.horizontal_axis.horizontal_crs;
-  h_axis.unit_of_measure = formProduct.horizontal_axis.unit_of_measure;
-  v_axis.unit_of_measure = formProduct.horizontal_axis.unit_of_measure;
+  h_axis.unit = formProduct.horizontal_axis.unit_of_measure;
+  v_axis.unit = formProduct.horizontal_axis.unit_of_measure;
   v_axis.interpolation = formProduct.horizontal_axis.interpolation;
   h_axis.interpolation = formProduct.horizontal_axis.interpolation;
   h_axis.step = formProduct.horizontal_axis.x_resolution;
@@ -313,7 +313,7 @@ const formToStac = (formProduct) => {
     : (z_axis.values = formProduct.vertical_axis.values);
 
   z_axis.reference_system = formProduct.vertical_axis.vertical_crs;
-  z_axis.unit_of_measure = formProduct.vertical_axis.unit_of_measure;
+  z_axis.unit = formProduct.vertical_axis.unit_of_measure;
   z_axis.interpolation = formProduct.vertical_axis.interpolation;
   z_axis.step = formProduct.vertical_axis.resolution;
   if (z_axis.extent !== undefined || z_axis.extent !== undefined) {
@@ -326,7 +326,7 @@ const formToStac = (formProduct) => {
       extent: dim.bbox || [],
       values: dim.values,
       reference_system: dim.reference_system,
-      unit_of_measure: dim.unit_of_measure,
+      unit: dim.unit_of_measure,
       interpolation: dim.interpolation,
       step: dim.resolution,
     };
@@ -442,7 +442,7 @@ const formToStac = (formProduct) => {
 
   stac.properties.license = formProduct.legal.license;
   stac.properties.personalData = formProduct.legal.personalData;
-  stac.properties.Provenance_name = formProduct.Provenance_name;
+  stac.properties.provenance_name = formProduct.provenance_name;
   stac.properties.preprocessing = formProduct.preprocessing;
   stac.properties.source_data = formProduct.source_data;
   stac.properties.models = formProduct.models;

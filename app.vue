@@ -958,7 +958,7 @@ async function submit(values) {
       <h2 class="title">Keywords</h2>
       <FormKit type="text" name="keywords" label="Keywords" />
       <h2 class="title">Provenance</h2>
-      <FormKit type="text" name="Provenance_name" label="Origin" />
+      <FormKit type="text" name="provenance_name" label="Origin" />
       <FormKit
         type="text"
         name="documentation"
