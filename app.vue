@@ -372,11 +372,7 @@ async function submit(values) {
         label="Description"
         help="Brief, nontechnical explanation of the datacube."
       />
-      <FormKit
-        type="text"
-        name="dataSource"
-        label="Data Source"
-      />
+      <FormKit type="text" name="dataSource" label="Data Source" />
       <FormKit
         type="text"
         name="datasource_type"
@@ -406,7 +402,7 @@ async function submit(values) {
           :key="item"
           :index="index"
         >
-          <div class="group">
+          <div class="group form-group">
             <FormKit
               type="url"
               label="Source"
@@ -429,6 +425,7 @@ async function submit(values) {
             />
           </div>
         </FormKit>
+        <br />
         <FormKit
           type="button"
           label="+ Add asset"
@@ -450,7 +447,7 @@ async function submit(values) {
           :key="item"
           :index="index"
         >
-          <div class="group">
+          <div class="group form-group">
             <FormKit
               type="text"
               name="organization"
@@ -481,6 +478,34 @@ async function submit(values) {
               label="Project Purpose"
             />
             <FormKit
+              label="Role"
+              type="select"
+              name="roles"
+              placeholder="Select organization role"
+              :options="[
+                {
+                  label:
+                    'licensor: The organization that is licensing the dataset under the license specified in the Collections license field',
+                  value: 'licensor',
+                },
+                {
+                  label:
+                    'producer: The provider that initially captured and processed the source data',
+                  value: 'producer',
+                },
+                {
+                  label:
+                    'processor: Any provider who processed data to a derived product.',
+                  value: 'processor',
+                },
+                {
+                  label:
+                    'host: The actual provider offering the data on their storage. There should be no more than one host, specified as last element of the list.',
+                  value: 'host',
+                },
+              ]"
+            />
+            <FormKit
               type="url"
               label="Documentation Link"
               name="doc_link"
@@ -497,10 +522,11 @@ async function submit(values) {
             />
           </div>
         </FormKit>
+        <br />
         <FormKit
           type="button"
           label="+ Add Organizations"
-          help="Add another band"
+          help="Add another organization"
           @click="() => node.input(value.concat({}))"
         />
       </FormKit>
@@ -812,7 +838,7 @@ async function submit(values) {
           :key="item"
           :index="index"
         >
-          <div class="group">
+          <div class="group form-group">
             <FormKit
               type="text"
               name="name"
@@ -879,6 +905,7 @@ async function submit(values) {
             />
           </div>
         </FormKit>
+        <br />
         <FormKit
           type="button"
           label="+ Add another"
@@ -899,7 +926,7 @@ async function submit(values) {
           :key="item"
           :index="index"
         >
-          <div class="group" style="display: flex; flex-wrap: wrap">
+          <div class="group form-group" style="display: flex; flex-wrap: wrap">
             <FormKit type="text" name="band_name" label="cell components" />
             <FormKit type="text" name="unit" label="Unit of Measure" />
             <FormKit
@@ -925,6 +952,7 @@ async function submit(values) {
             />
           </div>
         </FormKit>
+        <br />
         <FormKit
           type="button"
           label="+ Add bands"
@@ -1068,7 +1096,7 @@ async function submit(values) {
           :key="item"
           :index="index"
         >
-          <div class="group">
+          <div class="group form-group">
             <FormKit
               type="url"
               label="Source"
@@ -1091,6 +1119,7 @@ async function submit(values) {
             />
           </div>
         </FormKit>
+        <br />
         <FormKit
           type="button"
           label="+ Add thumbnails"
@@ -1126,6 +1155,16 @@ async function submit(values) {
   box-shadow: 0 0 2em rgba(0, 0, 0, 0.1);
   border-radius: 0.5em;
   margin: 4em auto;
+}
+
+.form-group {
+  width: calc(100% - 2em);
+  max-width: 1000px;
+  box-sizing: border-box;
+  padding: 2em;
+  box-shadow: 0 0 2em rgba(0, 0, 0, 0.1);
+  border-radius: 0.5em;
+  margin: 0.2em auto;
 }
 
 .title {

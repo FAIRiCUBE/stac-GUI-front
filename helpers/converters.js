@@ -43,6 +43,7 @@ const stacToForm = (stac) => {
       organization: provider.organization,
       comments: provider.comments,
       doc_link: provider.doc_link,
+      roles: provider.roles,
       organization_email: provider.organization_email,
       ORCID_ID: provider.ORCID_ID,
       project_purpose: provider.project_purpose,
@@ -259,6 +260,7 @@ const formToStac = (formProduct) => {
       doc_link: provider.doc_link,
       organization_email: provider.organization_email,
       ORCID_ID: provider.ORCID_ID,
+      roles:provider.roles,
       project_purpose: provider.project_purpose,
     };
     stac.properties.providers.push(providerObject);
