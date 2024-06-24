@@ -122,6 +122,8 @@ const stacToForm = (stac) => {
     formProduct.time_axis.values = range;
     formProduct.time_axis.regular = false;
   }
+  formProduct.time_axis.unit_of_measure = timeDim.unit;
+  formProduct.time_axis.interpolation = timeDim.interpolation;
 
   if (timeDim.step !== undefined) formProduct.time_axis.step = {};
   if (typeof timeDim.step === "string" && timeDim.step.startsWith("P")) {
@@ -417,6 +419,9 @@ const formToStac = (formProduct) => {
     times = hasTimes ? times.replace("Ms", "M") : "";
 
     cube.time.step = `${dates}${times}`;
+    cube.time.unit = formProduct.time_axis.unit_of_measure;
+    cube.time.interpolation = formProduct.time_axis.interpolation;
+
   }
   const bands = formProduct.bands;
   if (bands !== undefined && Array.isArray(bands))
