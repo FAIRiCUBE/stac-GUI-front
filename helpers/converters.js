@@ -489,9 +489,9 @@ const formToStac = (formProduct) => {
     formProduct.platform === "Eox"
       ? ["eox-cs1"]
       : formProduct.platform === "Rasdaman"
-      ? ["Mohinem"]
+      ? ["misev"]
       : formProduct.platform === "Both"
-      ? ["Mohinem", "eox-cs1"]
+      ? ["misev", "eox-cs1"]
       : [];
 
   const timeRange =
