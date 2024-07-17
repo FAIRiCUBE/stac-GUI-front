@@ -6,12 +6,24 @@ import LazyList from "lazy-load-list/vue";
 import licenses from "./helpers/licenses.json";
 import { FormKitIcon } from "@formkit/vue";
 import { vAutoAnimate } from "@formkit/auto-animate";
-
+import { FormKitMessages } from "@formkit/vue";
 const config = useRuntimeConfig();
 
 const filterText = ref("");
 
 const owner = config.public.owner;
+
+const validateTimeStep = (node) => {
+  for (const childName in node.value) {
+    if (
+      !isNaN(node.value[childName]) &&
+      !isNaN(parseFloat(node.value[childName]))
+    ) {
+      return true;
+    }
+  }
+  return false;
+};
 
 const items = await useFetch("/api/item-requests/items", {
   headers: {
@@ -369,6 +381,12 @@ async function submit(values) {
       <FormKit
         type="textarea"
         name="description"
+        validation="?required"
+        validation-visibility="live"
+        :validation-messages="{
+          required:
+            'description is required, you can submit now successfully but the validation test will fail.',
+        }"
         label="Description"
         help="Brief, nontechnical explanation of the datacube."
       />
@@ -378,6 +396,12 @@ async function submit(values) {
         name="datasource_type"
         label="Source Type"
         help="The data source type"
+        validation="?required"
+        validation-visibility="live"
+        :validation-messages="{
+          required:
+            'Source Type value is required, you can submit now successfully but the validation test will fail.',
+        }"
       />
       <FormKit type="group" name="general">
         <FormKit type="text" name="area_cover" label="total area cover" />
@@ -452,12 +476,24 @@ async function submit(values) {
               type="text"
               name="organization"
               label="Organization"
+              validation="?require_one:organization_name"
+              validation-visibility="live"
+              :validation-messages="{
+                require_one:
+                  'organization or name value is required, you can submit now successfully but the validation test will fail.',
+              }"
               help="The name of the organization which produced the dataset."
             />
             <FormKit
               type="text"
               name="organization_name"
               label="Name"
+              validation="?require_one:organization"
+              validation-visibility="live"
+              :validation-messages="{
+                require_one:
+                  'organization or name value is required, you can submit now successfully but the validation test will fail.',
+              }"
               help="The name of the organization which produced the dataset."
             />
             <FormKit
@@ -536,6 +572,12 @@ async function submit(values) {
           type="text"
           name="horizontal_crs"
           label="Horizontal CRS"
+          validation="?required"
+          validation-visibility="live"
+          :validation-messages="{
+            required:
+              'reference system is required, you can submit now successfully but the validation test will fail.',
+          }"
           help="reference system number in EPSG format e.g(4326)"
           placeholder="4326"
         />
@@ -549,7 +591,12 @@ async function submit(values) {
                 type="text"
                 label="bottom x bound"
                 number
-                validation="number"
+                validation="number|?required"
+                validation-visibility="live"
+                :validation-messages="{
+                  required:
+                    'all bbox values are required, you can submit now successfully but the validation test will fail.',
+                }"
                 placeholder="-180.0"
                 help="West Bound"
               />
@@ -557,7 +604,12 @@ async function submit(values) {
                 type="text"
                 label="upper x bound"
                 number
-                validation="number"
+                validation="number|?required"
+                validation-visibility="live"
+                :validation-messages="{
+                  required:
+                    'all bbox values are required, you can submit now successfully but the validation test will fail.',
+                }"
                 placeholder="180.0"
                 help="East Boound"
               />
@@ -571,7 +623,12 @@ async function submit(values) {
                 type="text"
                 label="bottom y bound"
                 number
-                validation="number"
+                validation="number|?required"
+                validation-visibility="live"
+                :validation-messages="{
+                  required:
+                    'all bbox values are required, you can submit now successfully but the validation test will fail.',
+                }"
                 placeholder="-90.0"
                 help="South Bound"
               />
@@ -579,7 +636,12 @@ async function submit(values) {
                 type="text"
                 label="upper y bound"
                 number
-                validation="number"
+                validation="number|?required"
+                validation-visibility="live"
+                :validation-messages="{
+                  required:
+                    'all bbox values are required, you can submit now successfully but the validation test will fail.',
+                }"
                 placeholder="90.0"
                 help="North Bound"
               />
@@ -602,6 +664,12 @@ async function submit(values) {
         <FormKit
           type="text"
           name="unit_of_measure"
+          validation="?required"
+          validation-visibility="live"
+          :validation-messages="{
+            required:
+              'unit of measure is required, you can submit now successfully but the validation test will fail.',
+          }"
           label="Unit of Measure"
           placeholder="degree"
         />
@@ -613,14 +681,28 @@ async function submit(values) {
         <FormKit
           type="text"
           name="x_resolution"
+          number
+          validation="number|?required"
+          validation-visibility="live"
+          :validation-messages="{
+            required:
+              'resolution as a float is required, you can submit now successfully but the validation test will fail.',
+          }"
           label="X Resolution"
-          help="Resolution (or 'irregular'). Should be 1 value as required by UC, not all resolutions of dataset"
+          help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
         />
         <FormKit
           type="text"
+          number
+          validation="number|?required"
+          validation-visibility="live"
+          :validation-messages="{
+            required:
+              'resolution as a float is required, you can submit now successfully but the validation test will fail.',
+          }"
           name="y_resolution"
           label="Y Resolution"
-          help="Resolution (or 'irregular'). Should be 1 value as required by UC, not all resolutions of dataset"
+          help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
         />
       </FormKit>
       <FormKit type="group" name="vertical_axis">
@@ -744,6 +826,12 @@ async function submit(values) {
         <FormKit
           type="text"
           name="unit_of_measure"
+          validation="?required"
+          validation-visibility="live"
+          :validation-messages="{
+            required:
+              'unit of measure is required, you can submit now successfully but the validation test will fail.',
+          }"
           label="Unit of Measure"
           placeholder="minute"
         />
@@ -755,13 +843,24 @@ async function submit(values) {
         <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
           Resolution
         </h4>
-        <div style="display: flex; flex-wrap: nowrap">
-          <FormKit
-            type="group"
-            name="step"
-            label="Resolution"
-            help="Resolution (or 'irregular'). Should be 1 value as required by UC, not all resolutions of dataset"
-          >
+
+        <FormKit
+          type="group"
+          validation-visibility="live"
+          :validation-rules="{ validateTimeStep }"
+          validation="validateTimeStep"
+          :validation-messages="{
+          validateTimeStep:'Time resolution is required, you can submit now successfully but the validation test will fail.',
+          }"
+          id="timeGroup"
+          name="step"
+          label="Resolution"
+          help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
+        >
+          <div>
+            <FormKitMessages />
+          </div>
+          <div style="display: flex; flex-wrap: nowrap">
             <FormKit
               type="number"
               number
@@ -770,7 +869,6 @@ async function submit(values) {
               step="1"
               name="Y"
               label="Years"
-              validation="number"
             />
             <FormKit
               type="number"
@@ -780,7 +878,6 @@ async function submit(values) {
               step="1"
               name="M"
               label="Months"
-              validation="number"
             />
             <FormKit
               type="number"
@@ -790,7 +887,6 @@ async function submit(values) {
               number
               name="D"
               label="Days"
-              validation="number"
             />
             <FormKit
               type="number"
@@ -800,7 +896,6 @@ async function submit(values) {
               step="1"
               name="H"
               label="Hours"
-              validation="number"
             />
             <FormKit
               type="number"
@@ -810,7 +905,6 @@ async function submit(values) {
               number
               name="Ms"
               label="Minutes"
-              validation="number"
             />
             <FormKit
               type="number"
@@ -820,10 +914,9 @@ async function submit(values) {
               number
               name="S"
               label="Seconds"
-              validation="number"
             />
-          </FormKit>
-        </div>
+          </div>
+        </FormKit>
       </FormKit>
       <FormKit
         type="list"
@@ -933,12 +1026,49 @@ async function submit(values) {
               label="Data Type"
               type="select"
               name="data_type"
+              validation="?required"
+              validation-visibility="live"
+              :validation-messages="{
+                required:
+                  'data type is required, you can submit now successfully but the validation test will fail.',
+              }"
               placeholder="Select a data type"
               :options="dataTypes"
             />
-            <FormKit type="text" number name="nodata" label="Null values" />
-            <FormKit type="textarea" name="definition" label="Definition" />
-            <FormKit type="textarea" name="description" label="Description" />
+            <FormKit
+              type="text"
+              number
+              validation="number|?required"
+              validation-visibility="live"
+              :validation-messages="{
+                required:
+                  'null value is required, you can submit now successfully but the validation test will fail.',
+              }"
+              name="nodata"
+              label="Null values"
+            />
+            <FormKit
+              type="textarea"
+              validation="?required"
+              validation-visibility="live"
+              :validation-messages="{
+                required:
+                  'definition is required, you can submit now successfully but the validation test will fail.',
+              }"
+              name="definition"
+              label="Definition"
+            />
+            <FormKit
+              type="textarea"
+              name="description"
+              validation="?required"
+              validation-visibility="live"
+              :validation-messages="{
+                required:
+                  'description is required, you can submit now successfully but the validation test will fail.',
+              }"
+              label="Description"
+            />
             <FormKit type="text" name="category_list" label="Category List" />
             <FormKit type="textarea" name="comment" label="Comment" />
             <FormKit type="text" name="interpolation" label="Interpolation" />
@@ -979,12 +1109,28 @@ async function submit(values) {
           type="select"
           placeholder="Select a license"
           name="license"
+          validation="?required"
+          validation-visibility="live"
+          :validation-messages="{
+            required:
+              'license is required, you can submit now successfully but the validation test will fail.',
+          }"
           :options="licensesData"
         />
         <FormKit type="text" name="personalData" label="Personal Data" />
       </FormKit>
       <h2 class="title">Keywords</h2>
-      <FormKit type="text" name="keywords" label="Keywords" />
+      <FormKit
+        type="text"
+        name="keywords"
+        validation="?required"
+        validation-visibility="live"
+        :validation-messages="{
+          required:
+            'keywords are required, you can submit now successfully but the validation test will fail.',
+        }"
+        label="Keywords"
+      />
       <h2 class="title">Provenance</h2>
       <FormKit type="text" name="provenance_name" label="Origin" />
       <FormKit
