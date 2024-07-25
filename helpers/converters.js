@@ -523,7 +523,7 @@ const formToStac = (formProduct) => {
         title: "Link to the rasdaman coverage description in XML",
       });
       stac.links.push({
-        href: `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman-dashboard/?layers=${stac.id}`,
+        href: `https://fairicube.rasdaman.com/rasdaman-dashboard/?layers=${stac.id}`,
         rel: "service",
         type: "text/html",
         title:
