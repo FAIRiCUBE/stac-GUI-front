@@ -155,8 +155,7 @@ const stacToForm = (stac) => {
 
   formProduct.reprojection_axis.re_projection_crs =
     stac.properties.re_projection_crs;
-  formProduct.reprojection_axis.unit_of_measure =
-    stac.properties.unit;
+  formProduct.reprojection_axis.unit_of_measure = stac.properties.unit;
   formProduct.reprojection_axis.resolution = stac.properties.resolution;
 
   formProduct.legal.license = stac.properties.license;
@@ -200,6 +199,7 @@ const formToStac = (formProduct) => {
     stac_version: "1.0.0",
     id: "",
     properties: {
+      keywords: [],
       license: "",
       description: "",
       providers: [],
@@ -260,7 +260,7 @@ const formToStac = (formProduct) => {
       doc_link: provider.doc_link,
       organization_email: provider.organization_email,
       ORCID_ID: provider.ORCID_ID,
-      roles:provider.roles,
+      roles: provider.roles,
       project_purpose: provider.project_purpose,
     };
     stac.properties.providers.push(providerObject);
@@ -285,7 +285,6 @@ const formToStac = (formProduct) => {
   stac.properties.datasource_type = formProduct.datasource_type;
   stac.properties.dataSource = formProduct.dataSource;
   stac.properties.description = formProduct.description;
-  stac.properties.keywords = formProduct.keywords;
   stac.properties.area_cover = formProduct.general.area_cover;
   stac.properties.documentation = formProduct.documentation;
   stac.properties.crs = formProduct.general.crs;
@@ -423,11 +422,12 @@ const formToStac = (formProduct) => {
     cube.time.step = `${dates}${times}`;
     cube.time.unit = formProduct.time_axis.unit_of_measure;
     cube.time.interpolation = formProduct.time_axis.interpolation;
-
   }
   const bands = formProduct.bands;
+  let keywords = formProduct.keywords.split(",")
   if (bands !== undefined && Array.isArray(bands))
     bands.map((band) => {
+      band.band_name && keywords.push(band.band_name);
       stac.properties["raster:bands"].push({
         band_name: band.band_name,
         unit: band.unit,
@@ -446,7 +446,7 @@ const formToStac = (formProduct) => {
   stac.properties.unit_of_measure =
     formProduct.reprojection_axis.unit_of_measure;
   stac.properties.resolution = formProduct.reprojection_axis.resolution;
-
+  stac.properties.keywords = [...new Set([...keywords])]
   stac.properties.license = formProduct.legal.license;
   stac.properties.personalData = formProduct.legal.personalData;
   stac.properties.provenance_name = formProduct.provenance_name;
@@ -496,10 +496,15 @@ const formToStac = (formProduct) => {
 
   const timeRange =
     cube.time.extent.length === 2 ? cube.time.extent : cube.time.values;
-  const hasNoRasdamanLinks = (links)=>{
-    const remain = links.filter(link=> ["Link to the rasdaman coverage description in XML", "Link to the rasdaman web application to Access, process gridded data"].includes(link.title))
-    return remain.length !== 2
-  }
+  const hasNoRasdamanLinks = (links) => {
+    const remain = links.filter((link) =>
+      [
+        "Link to the rasdaman coverage description in XML",
+        "Link to the rasdaman web application to Access, process gridded data",
+      ].includes(link.title)
+    );
+    return remain.length !== 2;
+  };
   if (["Rasdaman", "Both"].includes(formProduct.platform)) {
     let wmsBbox = [stac.bbox[1], stac.bbox[0], stac.bbox[3], stac.bbox[2]];
     let hasNoNullValues =
@@ -515,7 +520,7 @@ const formToStac = (formProduct) => {
         roles: ["thumbnail"],
       };
     }
-    if (hasNoRasdamanLinks(stac.links)){
+    if (hasNoRasdamanLinks(stac.links)) {
       stac.links.push({
         href: `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman/ows?&SERVICE=WCS&VERSION=2.1.0&REQUEST=DescribeCoverage&COVERAGEID=${stac.id}&outputType=GeneralGridCoverage`,
         rel: "about",
