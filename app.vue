@@ -140,7 +140,8 @@ const identifier_exists = ({ value }) => {
 };
 const distinct = (node) =>
   !node.value.includes("/") && !node.value.includes(" ");
-let licensesData = [{ label: "Other", value: "other" }];
+
+let licensesData = [{ label: "Other", value: "proprietary" }];
 const createLicenses = licenses.licenses.map((license) => {
   licensesData.push({ label: license.name, value: license.licenseId });
 });
@@ -850,7 +851,8 @@ async function submit(values) {
           :validation-rules="{ validateTimeStep }"
           validation="validateTimeStep"
           :validation-messages="{
-          validateTimeStep:'Time resolution is required, you can submit now successfully but the validation test will fail.',
+            validateTimeStep:
+              'Time resolution is required, you can submit now successfully but the validation test will fail.',
           }"
           id="timeGroup"
           name="step"
@@ -1117,6 +1119,20 @@ async function submit(values) {
           }"
           :options="licensesData"
         />
+        <FormKit
+          type="url"
+          placeholder="https://www.example.com..."
+          name="license_link"
+          label="link"
+          v-if="product.legal.license === 'proprietary'"
+          validation="required"
+          :validation-messages="{
+            required:
+              'if you select Other as license, please specify a link!',
+          }"
+          help="please provide a link to the license text"
+        />
+
         <FormKit type="text" name="personalData" label="Personal Data" />
       </FormKit>
       <h2 class="title">Keywords</h2>

@@ -159,6 +159,11 @@ const stacToForm = (stac) => {
   formProduct.reprojection_axis.resolution = stac.properties.resolution;
 
   formProduct.legal.license = stac.properties.license;
+  if (stac.properties.license === "proprietary") {
+    stac.links
+      .filter((link) => link.rel === "license")
+      .map((link) => (formProduct.legal.license_link = link.href));
+  }
   formProduct.legal.personalData = stac.properties.personalData;
   formProduct.provenance_name = stac.properties.provenance_name;
   formProduct.preprocessing = stac.properties.preprocessing;
@@ -199,7 +204,7 @@ const formToStac = (formProduct) => {
     stac_version: "1.0.0",
     id: "",
     properties: {
-      keywords: [],
+      keywords: "",
       license: "",
       description: "",
       providers: [],
@@ -424,7 +429,10 @@ const formToStac = (formProduct) => {
     cube.time.interpolation = formProduct.time_axis.interpolation;
   }
   const bands = formProduct.bands;
-  let keywords = formProduct.keywords.split(",")
+  let keywords =
+    typeof formProduct.keywords === "string"
+      ? formProduct.keywords.split(",")
+      : [];
   if (bands !== undefined && Array.isArray(bands))
     bands.map((band) => {
       band.band_name && keywords.push(band.band_name);
@@ -446,8 +454,18 @@ const formToStac = (formProduct) => {
   stac.properties.unit_of_measure =
     formProduct.reprojection_axis.unit_of_measure;
   stac.properties.resolution = formProduct.reprojection_axis.resolution;
-  stac.properties.keywords = [...new Set([...keywords])]
+  stac.properties.keywords = [...new Set([...keywords])];
   stac.properties.license = formProduct.legal.license;
+  if (stac.properties.license === "proprietary") {
+    stac.links.push({
+      href: formProduct.legal.license_link,
+      rel: "license",
+      type: "text/xml",
+      title: "Link to the item's license.",
+    });
+  } else {
+    stac.links.filter((link) => link.rel != "license");
+  }
   stac.properties.personalData = formProduct.legal.personalData;
   stac.properties.provenance_name = formProduct.provenance_name;
   stac.properties.preprocessing = formProduct.preprocessing;
