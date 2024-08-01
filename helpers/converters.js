@@ -405,7 +405,7 @@ const formToStac = (formProduct) => {
     let hasDates = false;
     let times = "T";
     let hasTimes = false;
-    Object.keys(formProduct.time_axis.step).map((unit) => {
+    formProduct.time_axis.step !== undefined && Object.keys(formProduct.time_axis.step).map((unit) => {
       let ts = formProduct.time_axis.step;
       if (ts[unit] !== undefined)
         if (["Y", "M", "D"].includes(unit)) {
