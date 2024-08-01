@@ -841,15 +841,14 @@ async function submit(values) {
           name="interpolation"
           label="Interpolation/Aggregation"
         />
-        <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
-          Resolution
-        </h4>
+
 
         <FormKit
           type="group"
+          v-if="product.time_axis.regular"
           validation-visibility="live"
           :validation-rules="{ validateTimeStep }"
-          validation="validateTimeStep"
+          validation="?validateTimeStep"
           :validation-messages="{
             validateTimeStep:
               'Time resolution is required, you can submit now successfully but the validation test will fail.',
@@ -859,6 +858,9 @@ async function submit(values) {
           label="Resolution"
           help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
         >
+        <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
+          Resolution
+        </h4>
           <div>
             <FormKitMessages />
           </div>
