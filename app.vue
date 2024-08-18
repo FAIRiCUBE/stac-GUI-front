@@ -25,23 +25,24 @@ const validateTimeStep = (node) => {
   return false;
 };
 
-const items = await useFetch("/api/item-requests/items", {
+const {status ,data:items} = await useFetch("/api/item-requests/items", {
   headers: {
     "content-type": "application/json",
     "x-user": owner,
     "x-FairicubeOwner": true,
   },
+  lazy: true,
 });
-const itemsList = items.data._rawValue;
-const data = itemsList.items;
-const members = itemsList.members;
+const itemsList = items._rawValue;
+const data =computed(()=> items.value?.items ?? []) ;
+const members = computed(()=> items.value?.members ?? []);
 let itemsIdentifiers = [];
-data.map((item) => itemsIdentifiers.push(item.name));
+data.value.map((item) => itemsIdentifiers.push(item.name));
 
 const filteredProduct = computed(() => {
   let filter = filterText.value;
-  if (!filter.length) return data;
-  return data.filter((item) =>
+  if (!filter.length) return data.value;
+  return data.value.filter((item) =>
     item.name.toLowerCase().includes(filter.toLowerCase())
   );
 });
@@ -70,7 +71,7 @@ const editForm = async (item) => {
   );
   const stacData = itemData.data._rawValue.stac;
   product = stacToForm(stacData);
-  product.members = members;
+  product.members = members.value;
   product.assignees = JSON.parse(JSON.stringify(item)).assignees;
   stacIsNew.value = false;
   showForm.value = true;
@@ -760,11 +761,19 @@ async function submit(values) {
           help="Resolution (or 'irregular'). Should be 1 value as required by UC, not all resolutions of dataset"
         />
       </FormKit>
-      <FormKit type="group" name="time_axis">
-        <h2 class="title">Time Axis</h2>
-        <FormKit type="checkbox" name="regular" label="regular ?" />
+      <br />
+      <FormKit type="group" name="third">
+        <div class="bbox" style="flex-direction: column">
+          <FormKit type="checkbox" name="threeD" label="3D" />
+          <h2 class="title">Time Axis</h2>
+        </div>
+      </FormKit>
 
-        <FormKit type="list" name="bbox" v-if="product.time_axis.regular">
+      <FormKit type="group"  name="time_axis" v-if="product.third && product.third.threeD">
+        <div class="group form-group">
+          <FormKit type="checkbox" name="regular" label="regular ?" />
+
+        <FormKit type="list" name="bbox" v-if="product.time_axis.regular" validation="required">
           <div class="bbox">
             <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
               Lower/Upper Bound
@@ -793,6 +802,7 @@ async function submit(values) {
             dynamic
             #default="{ node, items, value }"
             v-if="!product.time_axis.regular"
+            validation="required"
           >
             <div v-for="(item, index) in items" :key="item" class="todo">
               <FormKit
@@ -842,7 +852,6 @@ async function submit(values) {
           label="Interpolation/Aggregation"
         />
 
-
         <FormKit
           type="group"
           v-if="product.time_axis.regular"
@@ -858,9 +867,9 @@ async function submit(values) {
           label="Resolution"
           help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
         >
-        <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
-          Resolution
-        </h4>
+          <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
+            Resolution
+          </h4>
           <div>
             <FormKitMessages />
           </div>
@@ -921,6 +930,8 @@ async function submit(values) {
             />
           </div>
         </FormKit>
+        </div>
+
       </FormKit>
       <FormKit
         type="list"
@@ -1129,8 +1140,7 @@ async function submit(values) {
           v-if="product.legal.license === 'proprietary'"
           validation="required"
           :validation-messages="{
-            required:
-              'if you select Other as license, please specify a link!',
+            required: 'if you select Other as license, please specify a link!',
           }"
           help="please provide a link to the license text"
         />

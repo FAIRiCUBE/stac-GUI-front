@@ -5,6 +5,9 @@ const stacToForm = (stac) => {
   let formProduct = {
     state: "created",
     providers: [],
+    third: {
+      threeD: true,
+    },
     assets: [],
     thumbnails: [],
     general: {},
@@ -99,42 +102,46 @@ const stacToForm = (stac) => {
     });
 
   let timeDim = cube.time || cube.t;
-  let range =
-    timeDim.extent &&
-    Array.isArray(timeDim.extent) &&
-    timeDim.extent.length === 2
-      ? timeDim.extent
-      : timeDim.values;
-  range =
-    range &&
-    range.map((time) =>
-      ![undefined, null].includes(time) && typeof time === "string"
-        ? time.replace("Z", "")
-        : time
-    );
-  if (
-    timeDim.extent &&
-    Array.isArray(timeDim.extent) &&
-    timeDim.extent.length === 2
-  ) {
-    formProduct.time_axis.bbox = range;
-    formProduct.time_axis.regular = true;
-  } else {
-    formProduct.time_axis.values = range;
-    formProduct.time_axis.regular = false;
-  }
-  formProduct.time_axis.unit_of_measure = timeDim.unit;
-  formProduct.time_axis.interpolation = timeDim.interpolation;
+  if (timeDim) {
+    let range =
+      timeDim.extent &&
+      Array.isArray(timeDim.extent) &&
+      timeDim.extent.length === 2
+        ? timeDim.extent
+        : timeDim.values;
+    range =
+      range &&
+      range.map((time) =>
+        ![undefined, null].includes(time) && typeof time === "string"
+          ? time.replace("Z", "")
+          : time
+      );
+    if (
+      timeDim.extent &&
+      Array.isArray(timeDim.extent) &&
+      timeDim.extent.length === 2
+    ) {
+      formProduct.time_axis.bbox = range;
+      formProduct.time_axis.regular = true;
+    } else {
+      formProduct.time_axis.values = range;
+      formProduct.time_axis.regular = false;
+    }
+    formProduct.time_axis.unit_of_measure = timeDim.unit;
+    formProduct.time_axis.interpolation = timeDim.interpolation;
 
-  if (timeDim.step !== undefined) formProduct.time_axis.step = {};
-  if (typeof timeDim.step === "string" && timeDim.step.startsWith("P")) {
-    let parsedStep = parse(timeDim.step);
-    formProduct.time_axis.step.Y = parsedStep.years;
-    formProduct.time_axis.step.M = parsedStep.months;
-    formProduct.time_axis.step.D = parsedStep.days;
-    formProduct.time_axis.step.H = parsedStep.hours;
-    formProduct.time_axis.step.Ms = parsedStep.minutes;
-    formProduct.time_axis.step.S = parsedStep.seconds;
+    if (timeDim.step !== undefined) formProduct.time_axis.step = {};
+    if (typeof timeDim.step === "string" && timeDim.step.startsWith("P")) {
+      let parsedStep = parse(timeDim.step);
+      formProduct.time_axis.step.Y = parsedStep.years;
+      formProduct.time_axis.step.M = parsedStep.months;
+      formProduct.time_axis.step.D = parsedStep.days;
+      formProduct.time_axis.step.H = parsedStep.hours;
+      formProduct.time_axis.step.Ms = parsedStep.minutes;
+      formProduct.time_axis.step.S = parsedStep.seconds;
+    }
+  } else {
+    formProduct.third.threeD = false;
   }
 
   const bands = stac.properties["raster:bands"];
@@ -222,12 +229,7 @@ const formToStac = (formProduct) => {
           reference_system: "4326",
           type: "spatial",
         },
-        time: {
-          extent: [],
-          type: "temporal",
-        },
       },
-      datetime: "2000-01-01T00:00:00Z",
       "raster:bands": [],
     },
 
@@ -376,7 +378,7 @@ const formToStac = (formProduct) => {
     ];
   }
 
-  if (formProduct.time_axis !== undefined) {
+  if (formProduct.third.threeD === true) {
     let range =
       formProduct.time_axis.bbox !== undefined &&
       Array.isArray(formProduct.time_axis.bbox)
@@ -392,6 +394,9 @@ const formToStac = (formProduct) => {
     }
 
     if (range !== undefined) {
+      cube.time = {
+        type: "temporal",
+      };
       range = range.map((time) =>
         ![undefined, null].includes(time) && typeof time === "string"
           ? (time = `${time}Z`)
@@ -405,17 +410,18 @@ const formToStac = (formProduct) => {
     let hasDates = false;
     let times = "T";
     let hasTimes = false;
-    formProduct.time_axis.step !== undefined && Object.keys(formProduct.time_axis.step).map((unit) => {
-      let ts = formProduct.time_axis.step;
-      if (ts[unit] !== undefined)
-        if (["Y", "M", "D"].includes(unit)) {
-          hasDates = true;
-          dates = dates.concat("", `${ts[unit]}${unit}`);
-        } else {
-          hasTimes = true;
-          times = times.concat("", `${ts[unit]}${unit}`);
-        }
-    });
+    formProduct.time_axis.step !== undefined &&
+      Object.keys(formProduct.time_axis.step).map((unit) => {
+        let ts = formProduct.time_axis.step;
+        if (ts[unit] !== undefined)
+          if (["Y", "M", "D"].includes(unit)) {
+            hasDates = true;
+            dates = dates.concat("", `${ts[unit]}${unit}`);
+          } else {
+            hasTimes = true;
+            times = times.concat("", `${ts[unit]}${unit}`);
+          }
+      });
 
     formProduct.time_axis.bbox !== undefined &&
     Array.isArray(formProduct.time_axis.bbox)
@@ -512,8 +518,13 @@ const formToStac = (formProduct) => {
       ? ["misev", "eox-cs1"]
       : [];
 
-  const timeRange =
-    cube.time.extent.length === 2 ? cube.time.extent : cube.time.values;
+  let timeRange = undefined;
+  if (cube.time) {
+    timeRange =
+      cube.time.extent && cube.time.extent.length === 2
+        ? cube.time.extent
+        : cube.time.values;
+  }
   const hasNoRasdamanLinks = (links) => {
     const remain = links.filter((link) =>
       [
@@ -527,17 +538,17 @@ const formToStac = (formProduct) => {
     let wmsBbox = [stac.bbox[1], stac.bbox[0], stac.bbox[3], stac.bbox[2]];
     let hasNoNullValues =
       !wmsBbox.includes(undefined) && !wmsBbox.includes(null);
-    if (
-      timeRange !== undefined &&
-      Array.isArray(timeRange) &&
-      hasNoNullValues
-    ) {
-      let ThumbnailUrl = `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman/ows?service=WMS&version=1.3.0&request=GetMap&layers=${stac.id}&bbox=${wmsBbox}&time="${timeRange[0]}"&width=800&height=600&crs=EPSG:4326&format=image/png&transparent=true&styles=`;
+    if (hasNoNullValues) {
+      let ThumbnailUrl = `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman/ows?service=WMS&version=1.3.0&request=GetMap&layers=${stac.id}&bbox=${wmsBbox}&width=800&height=600&crs=EPSG:4326&format=image/png&transparent=true&styles=`;
+      if (timeRange !== undefined && Array.isArray(timeRange)) {
+        ThumbnailUrl = ThumbnailUrl + `time="${timeRange[0]}"`;
+      }
       stac.assets["thumbnail_rasdaman"] = {
         href: ThumbnailUrl,
         roles: ["thumbnail"],
       };
     }
+
     if (hasNoRasdamanLinks(stac.links)) {
       stac.links.push({
         href: `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman/ows?&SERVICE=WCS&VERSION=2.1.0&REQUEST=DescribeCoverage&COVERAGEID=${stac.id}&outputType=GeneralGridCoverage`,
@@ -553,7 +564,6 @@ const formToStac = (formProduct) => {
           "Link to the rasdaman web application to Access, process gridded data",
       });
     }
-
   }
   return {
     stac: stac,
