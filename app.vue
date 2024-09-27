@@ -1175,7 +1175,7 @@ async function submit(values) {
       <FormKit type="url" name="models" label="Models (Links)" />
       <h2 class="title">Data Quality</h2>
       <FormKit type="text" name="data_quality" label="Data Quality" />
-      <FormKit type="text" name="quality_control" label="Quality control" />
+      <FormKit type="text" name="quality_control" label="Quality Control" />
       <h2 class="title">Accessibility</h2>
       <FormKit
         type="text"
@@ -1184,7 +1184,7 @@ async function submit(values) {
       />
       <FormKit type="text" name="apis" label="APIs" />
       <FormKit type="text" name="distributions" label="Distributions" />
-      <FormKit type="text" name="access_control" label="Access control" />
+      <FormKit type="text" name="access_control" label="Access Control" />
 
       <h2 class="title">Dates</h2>
       <FormKit
