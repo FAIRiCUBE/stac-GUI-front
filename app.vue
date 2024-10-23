@@ -4,6 +4,7 @@ import { dataTypes } from "./helpers/helpers";
 import { stacToForm, formToStac } from "./helpers/converters";
 import LazyList from "lazy-load-list/vue";
 import licenses from "./helpers/licenses.json";
+import languages from "./helpers/languages.json";
 import { FormKitIcon } from "@formkit/vue";
 import { vAutoAnimate } from "@formkit/auto-animate";
 import { FormKitMessages } from "@formkit/vue";
@@ -25,19 +26,26 @@ const validateTimeStep = (node) => {
   return false;
 };
 
-const {status ,data:items} = await useFetch("/api/item-requests/items", {
-  headers: {
-    "content-type": "application/json",
-    "x-user": owner,
-    "x-FairicubeOwner": true,
-  },
-  lazy: true,
+const { status, data: items } = await useFetch(
+  "/api/item-requests/items",
+  {
+    headers: {
+      "content-type": "application/json",
+      "x-user": owner,
+      "x-FairicubeOwner": true,
+    },
+    lazy: true,
+  }
+);
+const data = computed(() => items.value?.items ?? []);
+const members = computed(() => items.value?.members ?? []);
+const itemsIdentifiers = computed(() => {
+  let ids = [];
+  if (data.value.length > 0) {
+    data.value.map((item) => ids.push(item.name));
+  }
+  return ids;
 });
-const itemsList = items._rawValue;
-const data =computed(()=> items.value?.items ?? []) ;
-const members = computed(()=> items.value?.members ?? []);
-let itemsIdentifiers = [];
-data.value.map((item) => itemsIdentifiers.push(item.name));
 
 const filteredProduct = computed(() => {
   let filter = filterText.value;
@@ -134,7 +142,8 @@ const useGlobeBound = (values) => {
 const identifier_exists = ({ value }) => {
   return new Promise((resolve) => {
     setTimeout(
-      () => resolve(!stacIsNew.value || !itemsIdentifiers.includes(value)),
+      () =>
+        resolve(!stacIsNew.value || !itemsIdentifiers.value.includes(value)),
       200
     );
   });
@@ -146,6 +155,11 @@ let licensesData = [{ label: "Other", value: "proprietary" }];
 const createLicenses = licenses.licenses.map((license) => {
   licensesData.push({ label: license.name, value: license.licenseId });
 });
+
+let languagesData = [{ label: "Multiple", value: "Multiple" }];
+const createLanguages = Object.keys(languages).map((language) =>
+  languagesData.push({ label: language, value: language })
+);
 async function submit(values) {
   if (values.horizontal_axis.regular) {
     if (values.horizontal_axis.bbox === undefined) {
@@ -769,169 +783,177 @@ async function submit(values) {
         </div>
       </FormKit>
 
-      <FormKit type="group"  name="time_axis" v-if="product.third && product.third.threeD">
+      <FormKit
+        type="group"
+        name="time_axis"
+        v-if="product.third && product.third.threeD"
+      >
         <div class="group form-group">
           <FormKit type="checkbox" name="regular" label="regular ?" />
 
-        <FormKit type="list" name="bbox" v-if="product.time_axis.regular" validation="required">
-          <div class="bbox">
-            <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
-              Lower/Upper Bound
-            </h4>
-            <br />
-            <FormKit
-              type="datetime-local"
-              label="begin time"
-              step="1"
-              validation=""
-            />
-            <FormKit
-              type="datetime-local"
-              label="end time"
-              step="1"
-              validation=""
-            />
-          </div>
-        </FormKit>
-
-        <div v-auto-animate>
           <FormKit
-            label="Values"
-            name="values"
             type="list"
-            dynamic
-            #default="{ node, items, value }"
-            v-if="!product.time_axis.regular"
+            name="bbox"
+            v-if="product.time_axis.regular"
             validation="required"
           >
-            <div v-for="(item, index) in items" :key="item" class="todo">
+            <div class="bbox">
+              <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
+                Lower/Upper Bound
+              </h4>
+              <br />
               <FormKit
                 type="datetime-local"
+                label="begin time"
                 step="1"
-                style="max-width: fit-content"
-                name="datetime"
-                :index="index"
+                validation=""
               />
-              <ul class="controls">
-                <li>
-                  <button
-                    type="button"
-                    @click="
-                      () => node.input(value.filter((_, i) => i !== index))
-                    "
-                    class="button close"
-                  >
-                    <FormKitIcon icon="close" />
-                  </button>
-                </li>
-              </ul>
+              <FormKit
+                type="datetime-local"
+                label="end time"
+                step="1"
+                validation=""
+              />
             </div>
+          </FormKit>
+
+          <div v-auto-animate>
             <FormKit
-              type="button"
-              style="background-color: gray"
-              @click="() => node.input(value.concat({}))"
-              >+</FormKit
+              label="Values"
+              name="values"
+              type="list"
+              dynamic
+              #default="{ node, items, value }"
+              v-if="!product.time_axis.regular"
+              validation="required"
             >
+              <div v-for="(item, index) in items" :key="item" class="todo">
+                <FormKit
+                  type="datetime-local"
+                  step="1"
+                  style="max-width: fit-content"
+                  name="datetime"
+                  :index="index"
+                />
+                <ul class="controls">
+                  <li>
+                    <button
+                      type="button"
+                      @click="
+                        () => node.input(value.filter((_, i) => i !== index))
+                      "
+                      class="button close"
+                    >
+                      <FormKitIcon icon="close" />
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <FormKit
+                type="button"
+                style="background-color: gray"
+                @click="() => node.input(value.concat({}))"
+                >+</FormKit
+              >
+            </FormKit>
+          </div>
+          <FormKit
+            type="text"
+            name="unit_of_measure"
+            validation="?required"
+            validation-visibility="live"
+            :validation-messages="{
+              required:
+                'unit of measure is required, you can submit now successfully but the validation test will fail.',
+            }"
+            label="Unit of Measure"
+            placeholder="minute"
+          />
+          <FormKit
+            type="text"
+            name="interpolation"
+            label="Interpolation/Aggregation"
+          />
+
+          <FormKit
+            type="group"
+            v-if="product.time_axis.regular"
+            validation-visibility="live"
+            :validation-rules="{ validateTimeStep }"
+            validation="?validateTimeStep"
+            :validation-messages="{
+              validateTimeStep:
+                'Time resolution is required, you can submit now successfully but the validation test will fail.',
+            }"
+            id="timeGroup"
+            name="step"
+            label="Resolution"
+            help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
+          >
+            <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
+              Resolution
+            </h4>
+            <div>
+              <FormKitMessages />
+            </div>
+            <div style="display: flex; flex-wrap: nowrap">
+              <FormKit
+                type="number"
+                number
+                min="0"
+                max="100"
+                step="1"
+                name="Y"
+                label="Years"
+              />
+              <FormKit
+                type="number"
+                number
+                min="0"
+                max="12"
+                step="1"
+                name="M"
+                label="Months"
+              />
+              <FormKit
+                type="number"
+                min="0"
+                max="30"
+                step="1"
+                number
+                name="D"
+                label="Days"
+              />
+              <FormKit
+                type="number"
+                number
+                min="0"
+                max="24"
+                step="1"
+                name="H"
+                label="Hours"
+              />
+              <FormKit
+                type="number"
+                min="0"
+                max="60"
+                step="1"
+                number
+                name="Ms"
+                label="Minutes"
+              />
+              <FormKit
+                type="number"
+                min="0"
+                max="60"
+                step="1"
+                number
+                name="S"
+                label="Seconds"
+              />
+            </div>
           </FormKit>
         </div>
-        <FormKit
-          type="text"
-          name="unit_of_measure"
-          validation="?required"
-          validation-visibility="live"
-          :validation-messages="{
-            required:
-              'unit of measure is required, you can submit now successfully but the validation test will fail.',
-          }"
-          label="Unit of Measure"
-          placeholder="minute"
-        />
-        <FormKit
-          type="text"
-          name="interpolation"
-          label="Interpolation/Aggregation"
-        />
-
-        <FormKit
-          type="group"
-          v-if="product.time_axis.regular"
-          validation-visibility="live"
-          :validation-rules="{ validateTimeStep }"
-          validation="?validateTimeStep"
-          :validation-messages="{
-            validateTimeStep:
-              'Time resolution is required, you can submit now successfully but the validation test will fail.',
-          }"
-          id="timeGroup"
-          name="step"
-          label="Resolution"
-          help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
-        >
-          <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
-            Resolution
-          </h4>
-          <div>
-            <FormKitMessages />
-          </div>
-          <div style="display: flex; flex-wrap: nowrap">
-            <FormKit
-              type="number"
-              number
-              min="0"
-              max="100"
-              step="1"
-              name="Y"
-              label="Years"
-            />
-            <FormKit
-              type="number"
-              number
-              min="0"
-              max="12"
-              step="1"
-              name="M"
-              label="Months"
-            />
-            <FormKit
-              type="number"
-              min="0"
-              max="30"
-              step="1"
-              number
-              name="D"
-              label="Days"
-            />
-            <FormKit
-              type="number"
-              number
-              min="0"
-              max="24"
-              step="1"
-              name="H"
-              label="Hours"
-            />
-            <FormKit
-              type="number"
-              min="0"
-              max="60"
-              step="1"
-              number
-              name="Ms"
-              label="Minutes"
-            />
-            <FormKit
-              type="number"
-              min="0"
-              max="60"
-              step="1"
-              number
-              name="S"
-              label="Seconds"
-            />
-          </div>
-        </FormKit>
-        </div>
-
       </FormKit>
       <FormKit
         type="list"
@@ -1182,7 +1204,67 @@ async function submit(values) {
         name="metada_standards"
         label="(Meta)data standers"
       />
-      <FormKit type="text" name="apis" label="APIs" />
+      <FormKit
+        type="list"
+        dynamic
+        #default="{ items, node, value }"
+        name="apis"
+      >
+        <h4 class="title">APIs</h4>
+        <FormKit
+          type="group"
+          v-for="(item, index) in items"
+          :key="item"
+          :index="index"
+        >
+          <div class="group form-group">
+            <FormKit
+              type="checkbox"
+              name="script"
+              label="Script"
+              help="check if the provided link points directly to a script code, uncheck it if it points to an html, Notebook.. etc"
+            />
+            <FormKit
+              type="url"
+              label="Link"
+              name="href"
+              placeholder="https://www.example.com..."
+              help="The link to the processing chain (or script) which describes how the data has been processed."
+            />
+            <FormKit
+              type="text"
+              name="title"
+              label="Title"
+              help="The title of the processing to be appear later in the catalog"
+            />
+
+            <FormKit
+              type="select"
+              name="language"
+              label="Language"
+              placeholder="Select a language"
+              :options="languagesData"
+              help="If the link is in a specific programming language, specify it here. (e.g javascript, python). If the page contains multiple programming languages, you can use Multiple"
+            />
+            <FormKit type="text" name="description" label="Description" />
+            <FormKit
+              type="button"
+              label="Remove"
+              style="background-color: red"
+              help="remove API"
+              @click="() => node.input(value.filter((_, i) => i !== index))"
+            />
+          </div>
+        </FormKit>
+        <br />
+        <FormKit
+          type="button"
+          label="+ Add API"
+          help="Add another API"
+          @click="() => node.input(value.concat({}))"
+        />
+      </FormKit>
+
       <FormKit type="text" name="distributions" label="Distributions" />
       <FormKit type="text" name="access_control" label="Access Control" />
 
@@ -1309,12 +1391,7 @@ async function submit(values) {
         :options="members"
         help="Select your Github name from the list to be assigned. "
       />
-      <FormKit
-        type="submit"
-        @submit="submit"
-        label="submit"
-        :disabled="!dirty"
-      />
+      <FormKit type="submit" @submit="submit" label="save" :disabled="!dirty" />
       <!-- <pre>{{ dirty }}</pre> -->
     </FormKit>
   </div>

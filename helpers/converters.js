@@ -1,4 +1,5 @@
 import reprojectBoundingBox from "reproject-bbox";
+import languages from "./languages.json";
 import { parse } from "iso8601-duration";
 
 const stacToForm = (stac) => {
@@ -10,6 +11,7 @@ const stacToForm = (stac) => {
     },
     assets: [],
     thumbnails: [],
+    apis: [],
     general: {},
     horizontal_axis: {
       bbox: { x: [null, null], y: [null, null] },
@@ -40,6 +42,20 @@ const stacToForm = (stac) => {
     } else if (stac.assets[asset].roles.includes("thumbnail"))
       formProduct.thumbnails.push(pushedAsset);
   });
+
+  stac.links
+    .filter((link) => link.rel == "example")
+    .map((link) => {
+      let pushedProcess = {
+        title: link.title,
+        href: link.href,
+        description: link.description,
+        language: link["example:language"],
+        script: !link["example:container"],
+      };
+      formProduct.apis.push(pushedProcess);
+    });
+
   stac.properties.providers.map((provider) => {
     let providerObject = {
       organization_name: provider.organization_name,
@@ -179,7 +195,6 @@ const stacToForm = (stac) => {
   formProduct.data_quality = stac.properties.data_quality;
   formProduct.quality_control = stac.properties.quality_control;
   formProduct.metada_standards = stac.properties.metada_standards;
-  formProduct.apis = stac.properties.apis;
   formProduct.distributions = stac.properties.distributions;
   formProduct.access_control = stac.properties.access_control;
 
@@ -286,6 +301,19 @@ const formToStac = (formProduct) => {
         href: thumbnail.href,
         roles: ["thumbnail"],
       };
+    });
+
+  if (Array.isArray(formProduct.apis))
+    formProduct.apis.map((api) => {
+      stac.links.push({
+        "example:container": !api.script,
+        "example:language": api.language,
+        type: api.language != "Multiple" ? languages[api.language] : null,
+        title: api.title,
+        description: api.description,
+        href: api.href,
+        rel: "example",
+      });
     });
   stac.id = formProduct.identifier;
   stac.properties.title = formProduct.title;
@@ -480,7 +508,7 @@ const formToStac = (formProduct) => {
   stac.properties.data_quality = formProduct.data_quality;
   stac.properties.quality_control = formProduct.quality_control;
   stac.properties.metada_standards = formProduct.metada_standards;
-  stac.properties.apis = formProduct.apis;
+
   stac.properties.distributions = formProduct.distributions;
   stac.properties.access_control = formProduct.access_control;
 
@@ -528,8 +556,9 @@ const formToStac = (formProduct) => {
   const hasNoRasdamanLinks = (links) => {
     const remain = links.filter((link) =>
       [
-        "Link to the rasdaman coverage description in XML",
-        "Link to the rasdaman web application to Access, process gridded data",
+        "Link to the description of this coverage object within the WCS Service",
+        "Link to the rasdaman dashboard to Access, process gridded data",
+        "Link to the main WCS service URI providing this data",
       ].includes(link.title)
     );
     return remain.length !== 2;
@@ -552,16 +581,22 @@ const formToStac = (formProduct) => {
     if (hasNoRasdamanLinks(stac.links)) {
       stac.links.push({
         href: `https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman/ows?&SERVICE=WCS&VERSION=2.1.0&REQUEST=DescribeCoverage&COVERAGEID=${stac.id}&outputType=GeneralGridCoverage`,
-        rel: "about",
+        rel: "item",
         type: "text/xml",
-        title: "Link to the rasdaman coverage description in XML",
+        title:
+          "Link to the description of this coverage object within the WCS Service",
       });
       stac.links.push({
         href: `https://fairicube.rasdaman.com/rasdaman-dashboard/?layers=${stac.id}`,
-        rel: "service",
+        rel: "alternate",
         type: "text/html",
-        title:
-          "Link to the rasdaman web application to Access, process gridded data",
+        title: "Link to the rasdaman dashboard to Access, process gridded data",
+      });
+      stac.links.push({
+        href: "https://catalog:JdpsUHpPoqXtbM3@fairicube.rasdaman.com/rasdaman/ows?&SERVICE=WCS&VERSION=2.1.0&REQUEST=GetCapabilities",
+        rel: "collection",
+        type: "text/xml",
+        title: "Link to the main WCS service URI providing this data",
       });
     }
   }
