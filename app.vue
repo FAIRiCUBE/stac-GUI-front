@@ -455,6 +455,12 @@ async function submit(values) {
               name="name"
               label="name"
               help="The name of the data asset"
+              :validation-rules="{ distinct }"
+              :validation-messages="{
+                distinct:
+                  'Asset name must not contain spaces or slash (/) characters',
+              }"
+              validation="distinct"
             />
             <FormKit
               type="button"
