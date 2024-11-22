@@ -1390,6 +1390,14 @@ async function submit(values) {
         />
       </FormKit>
       <FormKit
+        type="url"
+        label="Validation Link"
+        name="validation"
+        placeholder="https://www.example.com..."
+        validation="url"
+        help="Add a url link to the validation"
+      />
+      <FormKit
         type="select"
         label="Assignees"
         name="assignees"

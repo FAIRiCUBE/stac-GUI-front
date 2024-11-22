@@ -214,6 +214,7 @@ const stacToForm = (stac) => {
   formProduct.use_case_NILU = stac.properties.use_case_NILU;
   formProduct.use_case_NHM_2 = stac.properties.use_case_NHM_2;
   formProduct.ingestion_status = stac.properties.ingestion_status;
+  formProduct.validation = stac.properties.validation;
 
   formProduct.platform = stac.properties.platform;
   formProduct.state = "edited";
@@ -534,6 +535,7 @@ const formToStac = (formProduct) => {
   stac.properties.use_case_NILU = formProduct.use_case_NILU;
   stac.properties.use_case_NHM_2 = formProduct.use_case_NHM_2;
   stac.properties.ingestion_status = formProduct.ingestion_status;
+  stac.properties.validation = formProduct.validation;
 
   stac.properties.platform = formProduct.platform;
   const itemState = formProduct.state || "created";
