@@ -1223,6 +1223,14 @@ async function submit(values) {
       <FormKit type="url" name="models" label="Models (Links)" />
       <h2 class="title">Data Quality</h2>
       <FormKit type="text" name="data_quality" label="Data Quality" />
+      <FormKit
+        type="url"
+        label="Validation Link"
+        name="validation"
+        placeholder="https://www.example.com..."
+        validation="url"
+        help="Add a url link to the validation"
+      />
       <FormKit type="text" name="quality_control" label="Quality Control" />
       <h2 class="title">Accessibility</h2>
       <FormKit
@@ -1409,14 +1417,7 @@ async function submit(values) {
           @click="() => node.input(value.concat({}))"
         />
       </FormKit>
-      <FormKit
-        type="url"
-        label="Validation Link"
-        name="validation"
-        placeholder="https://www.example.com..."
-        validation="url"
-        help="Add a url link to the validation"
-      />
+
       <FormKit
         type="select"
         label="Assignees"
