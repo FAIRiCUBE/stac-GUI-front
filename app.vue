@@ -179,7 +179,7 @@ async function submit(values) {
     }
   }
 
-  const submitStac = formToStac(values);
+  const submitStac = await formToStac(values);
 
   const request = await useFetch(
     `/api/item-requests/stac_dist/${submitStac.stac.id}.json`,
@@ -449,6 +449,26 @@ async function submit(values) {
               name="href"
               placeholder="https://www.example.com..."
               help="The link to the source of the dataset."
+            />
+            <FormKit
+              label="Role"
+              type="select"
+              name="roles"
+              placeholder="Select Asset's role"
+              :options="[
+                {
+                  label: 'data',
+                  value: 'data',
+                },
+                {
+                  label: 'metadata',
+                  value: 'metadata',
+                },
+                {
+                  label: 'overview',
+                  value: 'overview',
+                },
+              ]"
             />
             <FormKit
               type="text"
@@ -1216,7 +1236,7 @@ async function submit(values) {
         #default="{ items, node, value }"
         name="apis"
       >
-        <h4 class="title">APIs</h4>
+        <h4 class="title">Additional Resources</h4>
         <FormKit
           type="group"
           v-for="(item, index) in items"
@@ -1257,7 +1277,7 @@ async function submit(values) {
               type="button"
               label="Remove"
               style="background-color: red"
-              help="remove API"
+              help="remove Resource"
               @click="() => node.input(value.filter((_, i) => i !== index))"
             />
           </div>
@@ -1265,8 +1285,8 @@ async function submit(values) {
         <br />
         <FormKit
           type="button"
-          label="+ Add API"
-          help="Add another API"
+          label="+ Add Resource"
+          help="Add another Resource"
           @click="() => node.input(value.concat({}))"
         />
       </FormKit>

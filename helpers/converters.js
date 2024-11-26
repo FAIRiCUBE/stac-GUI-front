@@ -36,10 +36,16 @@ const stacToForm = (stac) => {
     let pushedAsset = {
       name: asset,
       href: stac.assets[asset].href,
+      roles: stac.assets[asset].roles,
     };
-    if (stac.assets[asset].roles.includes("data")) {
+    let roles = stac.assets[asset].roles;
+    if (
+      roles.includes("data") ||
+      roles.includes("overview") ||
+      roles.includes("metadata")
+    ) {
       formProduct.assets.push(pushedAsset);
-    } else if (stac.assets[asset].roles.includes("thumbnail"))
+    } else if (roles.includes("thumbnail"))
       formProduct.thumbnails.push(pushedAsset);
   });
 
@@ -221,7 +227,7 @@ const stacToForm = (stac) => {
   return formProduct;
 };
 
-const formToStac = (formProduct) => {
+const formToStac = async (formProduct) => {
   let stac = {
     type: "Feature",
     stac_version: "1.0.0",
@@ -288,14 +294,22 @@ const formToStac = (formProduct) => {
     };
     stac.properties.providers.push(providerObject);
   });
-  // TODO asset name must be unique since it is going to be an object key
-  if (Array.isArray(formProduct.assets))
-    formProduct.assets.map((asset) => {
-      stac.assets[asset.name] = {
-        href: asset.href,
-        roles: ["data"],
-      };
+
+  const addAssetToOverview = (asset) => {
+    stac.links.map((link, index) => {
+      if (link.rel == "example" && link.title == asset.name) {
+        stac.links.splice(index, 1);
+      }
     });
+    stac.links.push({
+      "example:container": true,
+      title: asset.name,
+      description: "Link to the data visualization interactive web map.",
+      href: `https://vis.fairicube.eu/=data?${asset.href}`,
+      rel: "example",
+    });
+  };
+
   if (Array.isArray(formProduct.thumbnails))
     formProduct.thumbnails.map((thumbnail) => {
       stac.assets[thumbnail.name] = {
@@ -303,8 +317,7 @@ const formToStac = (formProduct) => {
         roles: ["thumbnail"],
       };
     });
-
-  if (Array.isArray(formProduct.apis))
+  let putApis = new Promise((resolve, reject) => {
     formProduct.apis.map((api) => {
       stac.links.push({
         "example:container": !api.script,
@@ -316,6 +329,30 @@ const formToStac = (formProduct) => {
         rel: "example",
       });
     });
+    resolve();
+  });
+
+  let putAssets = new Promise((resolve, reject) => {
+    if (Array.isArray(formProduct.assets) && formProduct.assets.length > 0)
+      formProduct.assets.map((asset) => {
+        let existingLinks = stac.links.filter(
+          (link) => link.rel == "example" && link.title == asset.name
+        );
+        if (asset.roles.includes("overview")) {
+          addAssetToOverview(asset);
+        }
+        stac.assets[asset.name] = {
+          href: asset.href,
+          roles: [asset.roles],
+        };
+      });
+    else {
+      stac.links = stac.links.filter((link) => link.rel != "overview");
+    }
+    resolve();
+  });
+  if (Array.isArray(formProduct.apis)) await Promise.all([putApis, putAssets]);
+
   stac.id = formProduct.identifier;
   stac.properties.title = formProduct.title;
   stac.properties.datasource_type = formProduct.datasource_type;
@@ -500,6 +537,28 @@ const formToStac = (formProduct) => {
     });
   } else {
     stac.links.filter((link) => link.rel != "license");
+  }
+  if (
+    stac.links.filter((link) => link.rel == "example").length > 0 &&
+    !stac.stac_extensions.includes(
+      "https://stac-extensions.github.io/example-links/v0.0.1/schema.json"
+    )
+  ) {
+    stac.stac_extensions.push(
+      "https://stac-extensions.github.io/example-links/v0.0.1/schema.json"
+    );
+  } else if (
+    stac.stac_extensions.includes(
+      "https://stac-extensions.github.io/example-links/v0.0.1/schema.json"
+    ) &&
+    stac.links.filter((link) => link.rel == "example").length == 0
+  ) {
+    stac.stac_extensions.splice(
+      stac.stac_extensions.indexOf(
+        "https://stac-extensions.github.io/example-links/v0.0.1/schema.json"
+      ),
+      1
+    );
   }
   stac.properties.personalData = formProduct.legal.personalData;
   stac.properties.provenance_name = formProduct.provenance_name;
