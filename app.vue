@@ -516,8 +516,8 @@ async function submit(values) {
           <div class="group form-group">
             <FormKit
               type="text"
-              name="organization"
-              label="Organization"
+              name="name"
+              label="Name"
               validation="?require_one:organization_name"
               validation-visibility="live"
               :validation-messages="{
@@ -529,7 +529,7 @@ async function submit(values) {
             <FormKit
               type="text"
               name="organization_name"
-              label="Name"
+              label="Organization"
               validation="?require_one:organization"
               validation-visibility="live"
               :validation-messages="{

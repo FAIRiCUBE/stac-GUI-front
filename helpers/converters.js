@@ -65,7 +65,7 @@ const stacToForm = (stac) => {
   stac.properties.providers.map((provider) => {
     let providerObject = {
       organization_name: provider.organization_name,
-      organization: provider.organization,
+      name: provider.name,
       comments: provider.comments,
       doc_link: provider.doc_link,
       roles: provider.roles,
@@ -284,12 +284,12 @@ const formToStac = async (formProduct) => {
   formProduct.providers.map((provider) => {
     let providerObject = {
       organization_name: provider.organization_name,
-      organization: provider.organization,
+      name: provider.name,
       comments: provider.comments,
       doc_link: provider.doc_link,
       organization_email: provider.organization_email,
       ORCID_ID: provider.ORCID_ID,
-      roles: provider.roles,
+      roles: [provider.roles],
       project_purpose: provider.project_purpose,
     };
     stac.properties.providers.push(providerObject);
