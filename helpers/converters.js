@@ -567,7 +567,7 @@ const formToStac = async (formProduct) => {
   stac.properties.models = formProduct.models;
   stac.properties.data_quality = formProduct.data_quality;
   stac.properties.quality_control = formProduct.quality_control;
-  stac.properties.metada_standards = formProduct.metada_standards;
+  stac.properties.metadata_standards = formProduct.metadata_standards;
 
   stac.properties.distributions = formProduct.distributions;
   stac.properties.access_control = formProduct.access_control;
