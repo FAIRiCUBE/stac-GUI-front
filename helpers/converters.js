@@ -200,7 +200,7 @@ const stacToForm = (stac) => {
   formProduct.models = stac.properties.models;
   formProduct.data_quality = stac.properties.data_quality;
   formProduct.quality_control = stac.properties.quality_control;
-  formProduct.metada_standards = stac.properties.metada_standards;
+  formProduct.metadata_standards = stac.properties.metadata_standards;
   formProduct.distributions = stac.properties.distributions;
   formProduct.access_control = stac.properties.access_control;
 
