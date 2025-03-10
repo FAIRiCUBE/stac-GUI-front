@@ -363,7 +363,7 @@ async function submit(values) {
       <FormKit
         type="radio"
         name="platform"
-        label="Target Platform"
+        label="Target Platform *"
         :options="{
           Eox: 'EOX',
           Rasdaman: 'rasdaman',
@@ -375,7 +375,7 @@ async function submit(values) {
       <FormKit
         type="text"
         name="title"
-        label="Title"
+        label="Title *"
         help="The title of the issue request"
         validation="required"
       />
@@ -383,7 +383,7 @@ async function submit(values) {
         :disabled="!stacIsNew"
         type="text"
         name="identifier"
-        label="ID"
+        label="ID *"
         help="The ID of the requested stac item"
         :validation-rules="{ identifier_exists, distinct }"
         :validation-messages="{
@@ -825,18 +825,18 @@ async function submit(values) {
           >
             <div class="bbox">
               <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
-                Lower/Upper Bound
+                Begin Time/End Time
               </h4>
               <br />
               <FormKit
                 type="datetime-local"
-                label="begin time"
+                label="begin time *"
                 step="1"
                 validation=""
               />
               <FormKit
                 type="datetime-local"
-                label="end time"
+                label="end time *"
                 step="1"
                 validation=""
               />
@@ -845,7 +845,7 @@ async function submit(values) {
 
           <div v-auto-animate>
             <FormKit
-              label="Values"
+              label="Values *"
               name="values"
               type="list"
               dynamic
@@ -1011,7 +1011,7 @@ async function submit(values) {
             <FormKit type="checkbox" name="regular" label="regular ?" />
             <FormKit type="list" name="bbox">
               <div class="bbox">
-                <h4 class="title" style="padding: 0.5em">Lower/Upper Bound</h4>
+                <h4 class="title" style="padding: 0.5em">Lower/Upper Value</h4>
                 <br />
                 <FormKit
                   type="text"
@@ -1037,12 +1037,6 @@ async function submit(values) {
             />
             <FormKit
               type="text"
-              name="values"
-              label="values"
-              v-if="!value[index].regular"
-            />
-            <FormKit
-              type="text"
               name="interpolation"
               label="Interpolation/Aggregation"
             />
@@ -1051,6 +1045,12 @@ async function submit(values) {
               name="resolution"
               label="Resolution"
               help="Resolution (or 'irregular'). Should be 1 value as required by UC, not all resolutions of dataset"
+            />
+            <FormKit
+              type="text"
+              name="values"
+              label="values"
+              v-if="!value[index].regular"
             />
             <FormKit
               type="button"
@@ -1083,7 +1083,7 @@ async function submit(values) {
           :index="index"
         >
           <div class="group form-group" style="display: flex; flex-wrap: wrap">
-            <FormKit type="text" name="band_name" label="cell components" />
+            <FormKit type="text" name="band_name" label="Cell Components" />
             <FormKit type="text" name="unit" label="Unit of Measure" />
             <FormKit
               label="Data Type"
@@ -1101,14 +1101,14 @@ async function submit(values) {
             <FormKit
               type="text"
               number
-              validation="number|?required"
+              validation="?required"
               validation-visibility="live"
               :validation-messages="{
                 required:
                   'null value is required, you can submit now successfully but the validation test will fail.',
               }"
               name="nodata"
-              label="Null values"
+              label="Null value"
             />
             <FormKit
               type="textarea"
@@ -1150,6 +1150,51 @@ async function submit(values) {
           type="button"
           label="+ Add bands"
           help="Add another band"
+          @click="() => node.input(value.concat({}))"
+        />
+      </FormKit>
+      <FormKit
+        type="list"
+        dynamic
+        #default="{ items, node, value }"
+        name="thumbnails"
+        v-if="product.platform !== 'Rasdaman'"
+      >
+        <h2 class="title">Thumbnails</h2>
+        <FormKit
+          type="group"
+          v-for="(item, index) in items"
+          :key="item"
+          :index="index"
+        >
+          <div class="group form-group">
+            <FormKit
+              type="url"
+              label="Source"
+              name="href"
+              placeholder="https://www.example.com..."
+              help="The link to the source of the thumbnail."
+            />
+            <FormKit
+              type="text"
+              name="name"
+              label="name"
+              help="The name of the thumbnail"
+            />
+            <FormKit
+              type="button"
+              label="Remove"
+              style="background-color: red"
+              help="remove thumbnail"
+              @click="() => node.input(value.filter((_, i) => i !== index))"
+            />
+          </div>
+        </FormKit>
+        <br />
+        <FormKit
+          type="button"
+          label="+ Add thumbnails"
+          help="Add another thumbnail"
           @click="() => node.input(value.concat({}))"
         />
       </FormKit>
@@ -1212,7 +1257,7 @@ async function submit(values) {
       <FormKit
         type="text"
         name="documentation"
-        label="Documents & publications"
+        label="Documents & Publications"
       />
       <FormKit
         type="text"
@@ -1235,8 +1280,8 @@ async function submit(values) {
       <h2 class="title">Accessibility</h2>
       <FormKit
         type="text"
-        name="metada_standards"
-        label="(Meta)data standers"
+        name="metadata_standards"
+        label="(Meta)Data Standers"
       />
       <FormKit
         type="list"
@@ -1321,11 +1366,11 @@ async function submit(values) {
         label="Modification"
         name="modification"
       />
-      <h2 class="title">Internal</h2>
+      <h2 class="title">Internal Priority</h2>
       <FormKit
         type="radio"
         name="use_case_S4E"
-        label="Priority (Climate change (S4E))"
+        label="Climate Change (S4E)"
         :options="{
           1: 'One',
           2: 'Two',
@@ -1334,7 +1379,7 @@ async function submit(values) {
       <FormKit
         type="radio"
         name="use_case_WER"
-        label="Biodiversity & agri (WER)"
+        label="Biodiversity & Agri (WER)"
         :options="{
           1: 'One',
           2: 'Two',
@@ -1343,7 +1388,7 @@ async function submit(values) {
       <FormKit
         type="radio"
         name="use_case_NHM"
-        label="Biodiversity occurrence cubes (NHM)"
+        label="Biodiversity Occurrence Cubes (NHM)"
         :options="{
           1: 'One',
           2: 'Two',
@@ -1352,7 +1397,7 @@ async function submit(values) {
       <FormKit
         type="radio"
         name="use_case_NILU"
-        label="Neighbourhood building stock (NILU)"
+        label="Neighbourhood Building Stock (NILU)"
         :options="{
           1: 'One',
           2: 'Two',
@@ -1372,52 +1417,6 @@ async function submit(values) {
         name="ingestion_status"
         label="Ingestion Status (rasdaman)"
       />
-      <FormKit
-        type="list"
-        dynamic
-        #default="{ items, node, value }"
-        name="thumbnails"
-        v-if="product.platform !== 'Rasdaman'"
-      >
-        <h2 class="title">Thumbnails</h2>
-        <FormKit
-          type="group"
-          v-for="(item, index) in items"
-          :key="item"
-          :index="index"
-        >
-          <div class="group form-group">
-            <FormKit
-              type="url"
-              label="Source"
-              name="href"
-              placeholder="https://www.example.com..."
-              help="The link to the source of the thumbnail."
-            />
-            <FormKit
-              type="text"
-              name="name"
-              label="name"
-              help="The name of the thumbnail"
-            />
-            <FormKit
-              type="button"
-              label="Remove"
-              style="background-color: red"
-              help="remove thumbnail"
-              @click="() => node.input(value.filter((_, i) => i !== index))"
-            />
-          </div>
-        </FormKit>
-        <br />
-        <FormKit
-          type="button"
-          label="+ Add thumbnails"
-          help="Add another thumbnail"
-          @click="() => node.input(value.concat({}))"
-        />
-      </FormKit>
-
       <FormKit
         type="select"
         label="Assignees"
