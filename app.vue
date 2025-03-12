@@ -631,7 +631,7 @@ async function submit(values) {
               <br />
               <FormKit
                 type="text"
-                label="bottom x bound"
+                label="Western X-Bound"
                 number
                 validation="number|?required"
                 validation-visibility="live"
@@ -644,7 +644,7 @@ async function submit(values) {
               />
               <FormKit
                 type="text"
-                label="upper x bound"
+                label="Eastern X-Bound"
                 number
                 validation="number|?required"
                 validation-visibility="live"
@@ -663,7 +663,7 @@ async function submit(values) {
               <br />
               <FormKit
                 type="text"
-                label="bottom y bound"
+                label="Southern Y-Bound"
                 number
                 validation="number|?required"
                 validation-visibility="live"
@@ -676,7 +676,7 @@ async function submit(values) {
               />
               <FormKit
                 type="text"
-                label="upper y bound"
+                label="Northern Y-Bound"
                 number
                 validation="number|?required"
                 validation-visibility="live"
@@ -692,13 +692,13 @@ async function submit(values) {
           <FormKit
             type="text"
             name="x_values"
-            label="X values"
+            label="X-Values"
             v-if="!product.horizontal_axis.regular"
           />
           <FormKit
             type="text"
             name="y_values"
-            label="Y values"
+            label="Y-Values"
             v-if="!product.horizontal_axis.regular"
           />
         </FormKit>
@@ -732,6 +732,7 @@ async function submit(values) {
           }"
           label="X Resolution"
           help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
+          v-if="product.horizontal_axis.regular"
         />
         <FormKit
           type="text"
@@ -745,6 +746,7 @@ async function submit(values) {
           name="y_resolution"
           label="Y Resolution"
           help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
+          v-if="product.horizontal_axis.regular"
         />
       </FormKit>
       <FormKit type="group" name="vertical_axis">
@@ -780,7 +782,7 @@ async function submit(values) {
         <FormKit
           type="text"
           name="values"
-          label="Vertical axis values"
+          label="Vertical Axis Values"
           v-if="!product.vertical_axis.regular"
         />
         <FormKit
@@ -799,6 +801,7 @@ async function submit(values) {
           name="resolution"
           label="Resolution"
           help="Resolution (or 'irregular'). Should be 1 value as required by UC, not all resolutions of dataset"
+          v-if="product.vertical_axis.regular"
         />
       </FormKit>
       <br />
@@ -1018,14 +1021,14 @@ async function submit(values) {
                   label="bottom left lat"
                   number
                   validation="number"
-                  help="Upper bound"
+                  help="Upper Bound"
                 />
                 <FormKit
                   type="text"
                   label="bottom left long"
                   number
                   validation="number"
-                  help="lower bound"
+                  help="Lower Bound"
                 />
               </div>
             </FormKit>
@@ -1045,6 +1048,7 @@ async function submit(values) {
               name="resolution"
               label="Resolution"
               help="Resolution (or 'irregular'). Should be 1 value as required by UC, not all resolutions of dataset"
+              v-if="value[index].regular"
             />
             <FormKit
               type="text"
