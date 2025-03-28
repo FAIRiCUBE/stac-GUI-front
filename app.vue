@@ -1268,8 +1268,8 @@ async function submit(values) {
         name="preprocessing"
         label="Preprocessing (description)"
       />
-      <FormKit type="url" name="source_data" label="Source Data (links)" />
-      <FormKit type="url" name="models" label="Models (Links)" />
+      <FormKit type="url" name="was_derived_from" label="Source Data (links)" />
+      <FormKit type="url" name="was_generated_by" label="Models (Links)" />
       <h2 class="title">Data Quality</h2>
       <FormKit type="text" name="data_quality" label="Data Quality" />
       <FormKit

@@ -196,8 +196,8 @@ const stacToForm = (stac) => {
   formProduct.legal.personalData = stac.properties.personalData;
   formProduct.provenance_name = stac.properties.provenance_name;
   formProduct.preprocessing = stac.properties.preprocessing;
-  formProduct.source_data = stac.properties.source_data;
-  formProduct.models = stac.properties.models;
+  formProduct.was_derived_from = stac.wasDerivedFrom;
+  formProduct.was_generated_by = stac.wasGeneratedBy;
   formProduct.data_quality = stac.properties.data_quality;
   formProduct.quality_control = stac.properties.quality_control;
   formProduct.metadata_standards = stac.properties.metadata_standards;
@@ -563,8 +563,8 @@ const formToStac = async (formProduct) => {
   stac.properties.personalData = formProduct.legal.personalData;
   stac.properties.provenance_name = formProduct.provenance_name;
   stac.properties.preprocessing = formProduct.preprocessing;
-  stac.properties.source_data = formProduct.source_data;
-  stac.properties.models = formProduct.models;
+  stac.wasDerivedFrom = formProduct.was_derived_from;
+  stac.wasGeneratedBy = formProduct.was_generated_by;
   stac.properties.data_quality = formProduct.data_quality;
   stac.properties.quality_control = formProduct.quality_control;
   stac.properties.metadata_standards = formProduct.metadata_standards;
@@ -660,6 +660,28 @@ const formToStac = async (formProduct) => {
         title: "Link to the main WCS service URI providing this data",
       });
     }
+  }
+  if (
+    (stac.wasGeneratedBy || stac.wasDerivedFrom ) &&
+    !stac.stac_extensions.includes(
+      "https://raw.githubusercontent.com/ogcincubator/bblock-prov-schema/refs/heads/master/_sources/schema.json"
+    )
+  ) {
+    stac.stac_extensions.push(
+      "https://raw.githubusercontent.com/ogcincubator/bblock-prov-schema/refs/heads/master/_sources/schema.json"
+    );
+  } else if (
+    stac.stac_extensions.includes(
+      "https://raw.githubusercontent.com/ogcincubator/bblock-prov-schema/refs/heads/master/_sources/schema.json"
+    ) &&
+    !(stac.wasGeneratedBy || stac.wasDerivedFrom )
+  ) {
+    stac.stac_extensions.splice(
+      stac.stac_extensions.indexOf(
+        "https://raw.githubusercontent.com/ogcincubator/bblock-prov-schema/refs/heads/master/_sources/schema.json"
+      ),
+      1
+    );
   }
   return {
     stac: stac,
