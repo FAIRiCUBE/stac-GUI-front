@@ -83,7 +83,7 @@ const stacToForm = (stac) => {
   formProduct.keywords = stac.properties.keywords;
   formProduct.documentation = stac.properties.documentation;
   formProduct.general.area_cover = stac.properties.area_cover;
-  formProduct.general.crs = stac.properties.crs;
+  formProduct.general.crs = stac.properties["proj:code"].split(":")[1];
   const cube = stac.properties["cube:dimensions"];
   const h_axis = cube.x || null;
   const v_axis = cube.y || null;
@@ -360,7 +360,7 @@ const formToStac = async (formProduct) => {
   stac.properties.description = formProduct.description;
   stac.properties.area_cover = formProduct.general.area_cover;
   stac.properties.documentation = formProduct.documentation;
-  stac.properties.crs = formProduct.general.crs;
+  stac.properties["proj:code"] = `EPSG:${formProduct.general.crs}`;
   const cube = stac.properties["cube:dimensions"];
   const h_axis = cube.x || null;
   const v_axis = cube.y || null;
@@ -683,6 +683,27 @@ const formToStac = async (formProduct) => {
       1
     );
   }
+
+  if (properties["proj:code"] &&
+    !stac.stac_extensions.includes(
+      "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
+    )
+  ) {
+    stac.stac_extensions.push(
+      "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
+    );
+  } else if (!properties["proj:code"] &&
+      stac.stac_extensions.includes(
+        "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
+      )
+    ) {
+      stac.stac_extensions.splice(
+        stac.stac_extensions.indexOf(
+          "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
+        ),
+        1
+      );
+    }
   return {
     stac: stac,
     state: itemState,
