@@ -36,7 +36,7 @@ const stacToForm = (stac) => {
     let pushedAsset = {
       name: asset,
       href: stac.assets[asset].href,
-      roles: stac.assets[asset].roles,
+      roles: Array.isArray(stac.assets[asset].roles[0]) ? stac.assets[asset].roles.toString(): stac.assets[asset].roles[0],
     };
     let roles = stac.assets[asset].roles;
     if (
@@ -68,7 +68,7 @@ const stacToForm = (stac) => {
       name: provider.name,
       comments: provider.comments,
       doc_link: provider.doc_link,
-      roles: provider.roles,
+      roles: Array.isArray(provider.roles[0]) ? provider.roles[0].toString(): provider.roles,
       organization_email: provider.organization_email,
       ORCID_ID: provider.ORCID_ID,
       project_purpose: provider.project_purpose,
@@ -83,7 +83,7 @@ const stacToForm = (stac) => {
   formProduct.keywords = stac.properties.keywords;
   formProduct.documentation = stac.properties.documentation;
   formProduct.general.area_cover = stac.properties.area_cover;
-  formProduct.general.crs = stac.properties["proj:code"].split(":")[1];
+  formProduct.general.crs = stac.properties["proj:code"] ? stac.properties["proj:code"].split(":")[1] : stac.properties.crs;
   const cube = stac.properties["cube:dimensions"];
   const h_axis = cube.x || null;
   const v_axis = cube.y || null;
@@ -360,7 +360,7 @@ const formToStac = async (formProduct) => {
   stac.properties.description = formProduct.description;
   stac.properties.area_cover = formProduct.general.area_cover;
   stac.properties.documentation = formProduct.documentation;
-  stac.properties["proj:code"] = `EPSG:${formProduct.general.crs}`;
+  stac.properties["proj:code"] = formProduct.general.crs && `EPSG:${formProduct.general.crs}`;
   const cube = stac.properties["cube:dimensions"];
   const h_axis = cube.x || null;
   const v_axis = cube.y || null;
@@ -684,7 +684,7 @@ const formToStac = async (formProduct) => {
     );
   }
 
-  if (properties["proj:code"] &&
+  if (stac.properties["proj:code"] &&
     !stac.stac_extensions.includes(
       "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
     )
@@ -692,7 +692,7 @@ const formToStac = async (formProduct) => {
     stac.stac_extensions.push(
       "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
     );
-  } else if (!properties["proj:code"] &&
+  } else if (!stac.properties["proj:code"] &&
       stac.stac_extensions.includes(
         "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
       )
