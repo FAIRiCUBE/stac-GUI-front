@@ -208,8 +208,8 @@ const stacToForm = (stac) => {
   formProduct.legal.personalData = stac.properties.personalData;
   formProduct.provenance_name = stac.properties.provenance_name;
   formProduct.preprocessing = stac.properties.preprocessing;
-  formProduct.was_derived_from = stac.wasDerivedFrom;
-  formProduct.was_generated_by = stac.wasGeneratedBy;
+  formProduct.was_derived_from = stac.wasDerivedFrom || stac.properties.source_data;
+  formProduct.was_generated_by = stac.wasGeneratedBy || stac.properties.models;
   formProduct.data_quality = stac.properties.data_quality;
   formProduct.quality_control = stac.properties.quality_control;
   formProduct.metadata_standards = stac.properties.metadata_standards;
