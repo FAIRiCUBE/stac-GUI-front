@@ -36,7 +36,10 @@ const stacToForm = (stac) => {
     let pushedAsset = {
       name: asset,
       href: stac.assets[asset].href,
-      roles: Array.isArray(stac.assets[asset].roles[0]) ? stac.assets[asset].roles.toString(): stac.assets[asset].roles[0],
+      roles:
+        stac.assets[asset].roles && Array.isArray(stac.assets[asset].roles[0])
+          ? stac.assets[asset].roles.toString()
+          : stac.assets[asset].roles[0],
     };
     let roles = stac.assets[asset].roles;
     if (
@@ -68,7 +71,11 @@ const stacToForm = (stac) => {
       name: provider.name,
       comments: provider.comments,
       doc_link: provider.doc_link,
-      roles: Array.isArray(provider.roles[0]) ? provider.roles[0].toString(): provider.roles,
+      roles:
+        provider.roles &&
+        (Array.isArray(provider.roles[0])
+          ? provider.roles[0].toString()
+          : provider.roles),
       organization_email: provider.organization_email,
       ORCID_ID: provider.ORCID_ID,
       project_purpose: provider.project_purpose,
@@ -83,7 +90,12 @@ const stacToForm = (stac) => {
   formProduct.keywords = stac.properties.keywords;
   formProduct.documentation = stac.properties.documentation;
   formProduct.general.area_cover = stac.properties.area_cover;
-  formProduct.general.crs = stac.properties["proj:code"] ? stac.properties["proj:code"].split(":")[1] : stac.properties.crs;
+  formProduct.general.crs = stac.properties["proj:code"]
+    ? stac.properties["proj:code"].split(":")[1]
+    : stac.properties.crs &&
+      stac.properties.crs.toLowerCase().startsWith("epsg:")
+    ? stac.properties.crs.split(":")[1]
+    : stac.properties.crs;
   const cube = stac.properties["cube:dimensions"];
   const h_axis = cube.x || null;
   const v_axis = cube.y || null;
@@ -289,7 +301,7 @@ const formToStac = async (formProduct) => {
       doc_link: provider.doc_link,
       organization_email: provider.organization_email,
       ORCID_ID: provider.ORCID_ID,
-      roles: [provider.roles],
+      roles: provider.roles && [provider.roles],
       project_purpose: provider.project_purpose,
     };
     stac.properties.providers.push(providerObject);
@@ -343,7 +355,7 @@ const formToStac = async (formProduct) => {
         }
         stac.assets[asset.name] = {
           href: asset.href,
-          roles: [asset.roles],
+          roles: asset.roles && [asset.roles],
         };
       });
     else {
@@ -360,7 +372,8 @@ const formToStac = async (formProduct) => {
   stac.properties.description = formProduct.description;
   stac.properties.area_cover = formProduct.general.area_cover;
   stac.properties.documentation = formProduct.documentation;
-  stac.properties["proj:code"] = formProduct.general.crs && `EPSG:${formProduct.general.crs}`;
+  stac.properties["proj:code"] =
+    formProduct.general.crs && `EPSG:${formProduct.general.crs}`;
   const cube = stac.properties["cube:dimensions"];
   const h_axis = cube.x || null;
   const v_axis = cube.y || null;
@@ -662,7 +675,7 @@ const formToStac = async (formProduct) => {
     }
   }
   if (
-    (stac.wasGeneratedBy || stac.wasDerivedFrom ) &&
+    (stac.wasGeneratedBy || stac.wasDerivedFrom) &&
     !stac.stac_extensions.includes(
       "https://raw.githubusercontent.com/ogcincubator/bblock-prov-schema/refs/heads/master/_sources/schema.json"
     )
@@ -674,7 +687,7 @@ const formToStac = async (formProduct) => {
     stac.stac_extensions.includes(
       "https://raw.githubusercontent.com/ogcincubator/bblock-prov-schema/refs/heads/master/_sources/schema.json"
     ) &&
-    !(stac.wasGeneratedBy || stac.wasDerivedFrom )
+    !(stac.wasGeneratedBy || stac.wasDerivedFrom)
   ) {
     stac.stac_extensions.splice(
       stac.stac_extensions.indexOf(
@@ -684,7 +697,8 @@ const formToStac = async (formProduct) => {
     );
   }
 
-  if (stac.properties["proj:code"] &&
+  if (
+    stac.properties["proj:code"] &&
     !stac.stac_extensions.includes(
       "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
     )
@@ -692,18 +706,19 @@ const formToStac = async (formProduct) => {
     stac.stac_extensions.push(
       "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
     );
-  } else if (!stac.properties["proj:code"] &&
-      stac.stac_extensions.includes(
+  } else if (
+    !stac.properties["proj:code"] &&
+    stac.stac_extensions.includes(
+      "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
+    )
+  ) {
+    stac.stac_extensions.splice(
+      stac.stac_extensions.indexOf(
         "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
-      )
-    ) {
-      stac.stac_extensions.splice(
-        stac.stac_extensions.indexOf(
-          "https://stac-extensions.github.io/projection/v2.0.0/schema.json"
-        ),
-        1
-      );
-    }
+      ),
+      1
+    );
+  }
   return {
     stac: stac,
     state: itemState,
