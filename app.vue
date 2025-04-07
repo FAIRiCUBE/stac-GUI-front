@@ -556,34 +556,6 @@ async function submit(values) {
               label="Project Purpose"
             />
             <FormKit
-              label="Role"
-              type="select"
-              name="roles"
-              placeholder="Select organization role"
-              :options="[
-                {
-                  label:
-                    'licensor: The organization that is licensing the dataset under the license specified in the Collections license field',
-                  value: 'licensor',
-                },
-                {
-                  label:
-                    'producer: The provider that initially captured and processed the source data',
-                  value: 'producer',
-                },
-                {
-                  label:
-                    'processor: Any provider who processed data to a derived product.',
-                  value: 'processor',
-                },
-                {
-                  label:
-                    'host: The actual provider offering the data on their storage. There should be no more than one host, specified as last element of the list.',
-                  value: 'host',
-                },
-              ]"
-            />
-            <FormKit
               type="url"
               label="Documentation Link"
               name="doc_link"

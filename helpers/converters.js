@@ -65,7 +65,7 @@ const stacToForm = (stac) => {
       formProduct.apis.push(pushedProcess);
     });
 
-  stac.properties.providers.map((provider) => {
+    stac.properties.providers && stac.properties.providers.map((provider) => {
     let providerObject = {
       organization_name: provider.organization_name,
       name: provider.name,
@@ -79,6 +79,22 @@ const stacToForm = (stac) => {
       organization_email: provider.organization_email,
       ORCID_ID: provider.ORCID_ID,
       project_purpose: provider.project_purpose,
+    };
+    formProduct.providers.push(providerObject);
+  });
+
+  stac.properties.contacts && stac.properties.contacts.map((contact) => {
+    let docLink = stac.links
+      .filter((link) => (link.title === contact.name && link.rel === "cite-as"))
+      .map((link) => link.href);
+    let providerObject = {
+      organization_name: contact.organization,
+      name: contact.name,
+      comments: contact.comments,
+      doc_link: docLink[0],
+      organization_email: contact.emails[0].value,
+      ORCID_ID: contact.ORCID_ID,
+      project_purpose: contact.project_purpose,
     };
     formProduct.providers.push(providerObject);
   });
@@ -208,8 +224,10 @@ const stacToForm = (stac) => {
   formProduct.legal.personalData = stac.properties.personalData;
   formProduct.provenance_name = stac.properties.provenance_name;
   formProduct.preprocessing = stac.properties.preprocessing;
-  formProduct.was_derived_from = stac.wasDerivedFrom || stac.properties.source_data;
-  formProduct.was_generated_by = stac.wasGeneratedBy || stac.properties.models;
+  formProduct.was_derived_from =
+    stac.properties.wasDerivedFrom || stac.properties.source_data;
+  formProduct.was_generated_by =
+    stac.properties.wasGeneratedBy || stac.properties.models;
   formProduct.data_quality = stac.properties.data_quality;
   formProduct.quality_control = stac.properties.quality_control;
   formProduct.metadata_standards = stac.properties.metadata_standards;
@@ -248,7 +266,7 @@ const formToStac = async (formProduct) => {
       keywords: "",
       license: "",
       description: "",
-      providers: [],
+      contacts: [],
       dataSource: "",
       "cube:dimensions": {
         x: {
@@ -294,17 +312,32 @@ const formToStac = async (formProduct) => {
   };
 
   formProduct.providers.map((provider) => {
-    let providerObject = {
-      organization_name: provider.organization_name,
+
+    let contactObject = {
+      organization: provider.organization_name,
       name: provider.name,
       comments: provider.comments,
-      doc_link: provider.doc_link,
-      organization_email: provider.organization_email,
-      ORCID_ID: provider.ORCID_ID,
-      roles: provider.roles && [provider.roles],
+      emails: provider.organization_email
+        ? [
+            {
+              value: provider.organization_email,
+              role: "work",
+            },
+          ]
+        : null,
+      identifier: provider.ORCID_ID,
       project_purpose: provider.project_purpose,
     };
-    stac.properties.providers.push(providerObject);
+
+    if (provider.doc_link) {
+      stac.links.push({
+        title: provider.name,
+        rel: "cite-as",
+        href: provider.doc_link
+      })
+    }
+
+    stac.properties.contacts.push(contactObject);
   });
 
   const addAssetToOverview = (asset) => {
@@ -577,7 +610,7 @@ const formToStac = async (formProduct) => {
   stac.properties.provenance_name = formProduct.provenance_name;
   stac.properties.preprocessing = formProduct.preprocessing;
   stac.wasDerivedFrom = formProduct.was_derived_from;
-  stac.wasGeneratedBy = formProduct.was_generated_by;
+  stac.properties.wasGeneratedBy = formProduct.was_generated_by;
   stac.properties.data_quality = formProduct.data_quality;
   stac.properties.quality_control = formProduct.quality_control;
   stac.properties.metadata_standards = formProduct.metadata_standards;
