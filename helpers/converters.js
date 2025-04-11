@@ -65,39 +65,41 @@ const stacToForm = (stac) => {
       formProduct.apis.push(pushedProcess);
     });
 
-    stac.properties.providers && stac.properties.providers.map((provider) => {
-    let providerObject = {
-      organization_name: provider.organization_name,
-      name: provider.name,
-      comments: provider.comments,
-      doc_link: provider.doc_link,
-      roles:
-        provider.roles &&
-        (Array.isArray(provider.roles[0])
-          ? provider.roles[0].toString()
-          : provider.roles),
-      organization_email: provider.organization_email,
-      ORCID_ID: provider.ORCID_ID,
-      project_purpose: provider.project_purpose,
-    };
-    formProduct.providers.push(providerObject);
-  });
+  stac.properties.providers &&
+    stac.properties.providers.map((provider) => {
+      let providerObject = {
+        organization_name: provider.organization_name,
+        name: provider.name,
+        comments: provider.comments,
+        doc_link: provider.doc_link,
+        roles:
+          provider.roles &&
+          (Array.isArray(provider.roles[0])
+            ? provider.roles[0].toString()
+            : provider.roles),
+        organization_email: provider.organization_email,
+        ORCID_ID: provider.ORCID_ID,
+        project_purpose: provider.project_purpose,
+      };
+      formProduct.providers.push(providerObject);
+    });
 
-  stac.properties.contacts && stac.properties.contacts.map((contact) => {
-    let docLink = stac.links
-      .filter((link) => (link.title === contact.name && link.rel === "cite-as"))
-      .map((link) => link.href);
-    let providerObject = {
-      organization_name: contact.organization,
-      name: contact.name,
-      comments: contact.comments,
-      doc_link: docLink[0],
-      organization_email: contact.emails[0].value,
-      ORCID_ID: contact.ORCID_ID,
-      project_purpose: contact.project_purpose,
-    };
-    formProduct.providers.push(providerObject);
-  });
+  stac.properties.contacts &&
+    stac.properties.contacts.map((contact) => {
+      let docLink = stac.links
+        .filter((link) => link.title === contact.name && link.rel === "cite-as")
+        .map((link) => link.href);
+      let providerObject = {
+        organization_name: contact.organization,
+        name: contact.name,
+        comments: contact.comments,
+        doc_link: docLink[0],
+        organization_email: contact.emails[0].value,
+        ORCID_ID: contact.ORCID_ID,
+        project_purpose: contact.project_purpose,
+      };
+      formProduct.providers.push(providerObject);
+    });
   formProduct.identifier = stac.id;
   formProduct.title = stac.properties.title;
   formProduct.datasource_type = stac.properties.datasource_type;
@@ -194,7 +196,7 @@ const stacToForm = (stac) => {
     formProduct.third.threeD = false;
   }
 
-  const bands = stac.properties["raster:bands"];
+  const bands = stac.properties["bands"] || stac.properties["raster:bands"];
   if (bands !== undefined && Array.isArray(bands))
     bands.map((band) => {
       formProduct.bands.push({
@@ -204,7 +206,7 @@ const stacToForm = (stac) => {
         nodata: band.nodata,
         definition: band.definition,
         description: band.description,
-        category_list: band.category_list,
+        ["classification:classes"]: band["classification:classes"] || [],
         comment: band.comment,
         interpolation: band.interpolation,
       });
@@ -282,7 +284,7 @@ const formToStac = async (formProduct) => {
           type: "spatial",
         },
       },
-      "raster:bands": [],
+      bands: [],
     },
 
     geometry: {
@@ -306,13 +308,11 @@ const formToStac = async (formProduct) => {
     assets: {},
     bbox: [],
     stac_extensions: [
-      "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
       "https://stac-extensions.github.io/datacube/v2.0.0/schema.json",
     ],
   };
 
   formProduct.providers.map((provider) => {
-
     let contactObject = {
       organization: provider.organization_name,
       name: provider.name,
@@ -333,8 +333,8 @@ const formToStac = async (formProduct) => {
       stac.links.push({
         title: provider.name,
         rel: "cite-as",
-        href: provider.doc_link
-      })
+        href: provider.doc_link,
+      });
     }
 
     stac.properties.contacts.push(contactObject);
@@ -554,16 +554,20 @@ const formToStac = async (formProduct) => {
   if (bands !== undefined && Array.isArray(bands))
     bands.map((band) => {
       band.band_name && keywords.push(band.band_name);
-      stac.properties["raster:bands"].push({
-        band_name: band.band_name,
-        unit: band.unit,
-        data_type: band.data_type,
-        nodata: band.nodata,
-        definition: band.definition,
-        description: band.description,
-        category_list: band.category_list,
-        comment: band.comment,
-        interpolation: band.interpolation,
+      if (band["classification:classes"].length === 0){
+        delete band["classification:classes"]
+      }
+
+      stac.properties["bands"].push({
+        band_name: band?.band_name,
+        unit: band?.unit,
+        data_type: band?.data_type,
+        nodata: band?.nodata,
+        definition: band?.definition,
+        description: band?.description,
+        ["classification:classes"]: band?.["classification:classes"],
+        comment: band?.comment,
+        interpolation: band?.interpolation,
       });
     });
 
@@ -752,6 +756,32 @@ const formToStac = async (formProduct) => {
       1
     );
   }
+
+  if (
+    stac.properties.bands.filter((band)=>band["classification:classes"] ).length > 0 &&
+    !stac.stac_extensions.includes(
+      "https://stac-extensions.github.io/classification/v2.0.0/schema.json"
+    )
+  ) {
+    stac.stac_extensions.push(
+      "https://stac-extensions.github.io/classification/v2.0.0/schema.json"
+    );
+  } else if (
+    stac.properties.bands.filter((band)=>band["classification:classes"]).length === 0  &&
+    stac.stac_extensions.includes(
+      "https://stac-extensions.github.io/classification/v2.0.0/schema.json"
+    )
+  ) {
+    stac.stac_extensions.splice(
+      stac.stac_extensions.indexOf(
+        "https://stac-extensions.github.io/classification/v2.0.0/schema.json"
+      ),
+      1
+    );
+  }
+
+
+
   return {
     stac: stac,
     state: itemState,

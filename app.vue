@@ -1058,7 +1058,7 @@ async function submit(values) {
           :key="item"
           :index="index"
         >
-          <div class="group form-group" style="display: flex; flex-wrap: wrap">
+          <div class="group form-group" >
             <FormKit type="text" name="band_name" label="Cell Components" />
             <FormKit type="text" name="unit" label="Unit of Measure" />
             <FormKit
@@ -1108,7 +1108,46 @@ async function submit(values) {
               }"
               label="Description"
             />
-            <FormKit type="text" name="category_list" label="Category List" />
+            <h4 class="title">Category List</h4>
+                <br>
+            <div class="group form-group" style="display: flex; flex-wrap: wrap">
+              <FormKit
+                type="list"
+                dynamic
+                #default="{ items, node, value }"
+                name="classification:classes"
+              >
+                <FormKit
+                  type="group"
+                  v-for="(item, index) in items"
+                  :key="item"
+                  :index="index"
+                >
+                  <FormKit type="text" name="name" label="Category List Name" />
+                  <FormKit
+                    type="text"
+                    name="value"
+                    label="Category List Value"
+                  />
+                  <FormKit
+                    type="button"
+                    label="-"
+                    style="background-color: red"
+                    help="remove a class"
+                    @click="
+                      () => node.input(value.filter((_, i) => i !== index))
+                    "
+                  />
+                </FormKit>
+                <FormKit
+                  type="button"
+                  label="+"
+                  help="Add another class"
+                  @click="() => node.input(value.concat({}))"
+                />
+              </FormKit>
+            </div>
+
             <FormKit type="textarea" name="comment" label="Comment" />
             <FormKit type="text" name="interpolation" label="Interpolation" />
 
