@@ -1,7 +1,14 @@
 import reprojectBoundingBox from "reproject-bbox";
 import languages from "./languages.json";
 import { parse } from "iso8601-duration";
-
+const cases = {
+  S4E: "use_case_S4E",
+  WER: "use_case_WER",
+  NHM: "use_case_NHM",
+  NHM_2: "use_case_NHM_2",
+  NILU: "use_case_NILU",
+};
+const isNumber = (value) => typeof value === "number";
 const stacToForm = (stac) => {
   let formProduct = {
     state: "created",
@@ -246,15 +253,17 @@ const stacToForm = (stac) => {
     ? stac.properties.datetime.replace("Z", "")
     : null;
 
-  formProduct.use_case_S4E = stac.properties.use_case_S4E;
-  formProduct.use_case_WER = stac.properties.use_case_WER;
-  formProduct.use_case_NHM = stac.properties.use_case_NHM;
-  formProduct.use_case_NILU = stac.properties.use_case_NILU;
-  formProduct.use_case_NHM_2 = stac.properties.use_case_NHM_2;
+  stac.properties["project:use_cases"] &&
+    stac.properties["project:use_cases"].map((useCase) => {
+      formProduct[cases[useCase]] = 1;
+    });
   formProduct.ingestion_status = stac.properties.ingestion_status;
   formProduct.validation = stac.properties.validation;
 
-  formProduct.platform = stac.properties.platform;
+  formProduct.platform =
+    stac.properties["project:platform"] ||
+    stac.properties.platform ||
+    stac.properties.datacube_platform;
   formProduct.state = "edited";
   return formProduct;
 };
@@ -270,6 +279,7 @@ const formToStac = async (formProduct) => {
       description: "",
       contacts: [],
       dataSource: "",
+      "project:use_cases": [],
       "cube:dimensions": {
         x: {
           axis: "x",
@@ -309,6 +319,7 @@ const formToStac = async (formProduct) => {
     bbox: [],
     stac_extensions: [
       "https://stac-extensions.github.io/datacube/v2.0.0/schema.json",
+      "https://raw.githubusercontent.com/baloola/project/refs/heads/main/json-schema/schema.json",
     ],
   };
 
@@ -554,8 +565,8 @@ const formToStac = async (formProduct) => {
   if (bands !== undefined && Array.isArray(bands))
     bands.map((band) => {
       band.band_name && keywords.push(band.band_name);
-      if (band["classification:classes"].length === 0){
-        delete band["classification:classes"]
+      if (band["classification:classes"].length === 0) {
+        delete band["classification:classes"];
       }
 
       stac.properties["bands"].push({
@@ -638,15 +649,24 @@ const formToStac = async (formProduct) => {
       ? (formProduct.provision = `${formProduct.provision}Z`)
       : formProduct.provision;
 
-  stac.properties.use_case_S4E = formProduct.use_case_S4E;
-  stac.properties.use_case_WER = formProduct.use_case_WER;
-  stac.properties.use_case_NHM = formProduct.use_case_NHM;
-  stac.properties.use_case_NILU = formProduct.use_case_NILU;
-  stac.properties.use_case_NHM_2 = formProduct.use_case_NHM_2;
+  if (Number(formProduct.use_case_S4E) > 0) {
+    stac.properties["project:use_cases"].push("S4E");
+  }
+  if (Number(formProduct.use_case_WER) > 0) {
+    stac.properties["project:use_cases"].push("WER");
+  }
+  if (Number(formProduct.use_case_NHM) > 0) {
+    stac.properties["project:use_cases"].push("NHM");
+  }
+  if (Number(formProduct.use_case_NILU) > 0) {
+    stac.properties["project:use_cases"].push("NILU");
+  }
+  if (Number(formProduct.use_case_NHM_2) > 0) {
+    stac.properties["project:use_cases"].push("NHM_2");
+  }
   stac.properties.ingestion_status = formProduct.ingestion_status;
   stac.properties.validation = formProduct.validation;
-
-  stac.properties.platform = formProduct.platform;
+  stac.properties["project:platform"] = formProduct.platform;
   const itemState = formProduct.state || "created";
   const reviewers =
     formProduct.platform === "Eox"
@@ -758,7 +778,8 @@ const formToStac = async (formProduct) => {
   }
 
   if (
-    stac.properties.bands.filter((band)=>band["classification:classes"] ).length > 0 &&
+    stac.properties.bands.filter((band) => band["classification:classes"])
+      .length > 0 &&
     !stac.stac_extensions.includes(
       "https://stac-extensions.github.io/classification/v2.0.0/schema.json"
     )
@@ -767,7 +788,8 @@ const formToStac = async (formProduct) => {
       "https://stac-extensions.github.io/classification/v2.0.0/schema.json"
     );
   } else if (
-    stac.properties.bands.filter((band)=>band["classification:classes"]).length === 0  &&
+    stac.properties.bands.filter((band) => band["classification:classes"])
+      .length === 0 &&
     stac.stac_extensions.includes(
       "https://stac-extensions.github.io/classification/v2.0.0/schema.json"
     )
@@ -779,8 +801,6 @@ const formToStac = async (formProduct) => {
       1
     );
   }
-
-
 
   return {
     stac: stac,
