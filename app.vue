@@ -419,7 +419,9 @@ async function submit(values) {
             'Source Type value is required, you can submit now successfully but the validation test will fail.',
         }"
       />
+
       <FormKit type="group" name="general">
+        <FormKit type="text" name="project_purpose" label="Project Purpose" />
         <FormKit type="text" name="area_cover" label="total area cover" />
         <FormKit
           type="text"
@@ -549,11 +551,6 @@ async function submit(values) {
               name="ORCID_ID"
               label="ORCID ID"
               help="ORCID ID"
-            />
-            <FormKit
-              type="text"
-              name="project_purpose"
-              label="Project Purpose"
             />
             <FormKit
               type="url"
@@ -1058,7 +1055,7 @@ async function submit(values) {
           :key="item"
           :index="index"
         >
-          <div class="group form-group" >
+          <div class="group form-group">
             <FormKit type="text" name="band_name" label="Cell Components" />
             <FormKit type="text" name="unit" label="Unit of Measure" />
             <FormKit
@@ -1109,8 +1106,11 @@ async function submit(values) {
               label="Description"
             />
             <h4 class="title">Category List</h4>
-                <br>
-            <div class="group form-group" style="display: flex; flex-wrap: wrap">
+            <br />
+            <div
+              class="group form-group"
+              style="display: flex; flex-wrap: wrap"
+            >
               <FormKit
                 type="list"
                 dynamic
@@ -1282,16 +1282,15 @@ async function submit(values) {
       <FormKit type="url" name="was_derived_from" label="Source Data (links)" />
       <FormKit type="url" name="was_generated_by" label="Models (Links)" />
       <h2 class="title">Data Quality</h2>
-      <FormKit type="text" name="data_quality" label="Data Quality" />
       <FormKit
         type="url"
-        label="Validation Link"
-        name="validation"
+        label="Quality Measures"
+        name="quality_control"
         placeholder="https://www.example.com..."
         validation="url"
         help="Add a url link to the validation"
       />
-      <FormKit type="text" name="quality_control" label="Quality Control" />
+      <FormKit type="text" name="data_quality" label="Data Quality" />
       <h2 class="title">Accessibility</h2>
       <FormKit
         type="text"

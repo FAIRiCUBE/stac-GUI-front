@@ -86,8 +86,8 @@ const stacToForm = (stac) => {
             : provider.roles),
         organization_email: provider.organization_email,
         ORCID_ID: provider.ORCID_ID,
-        project_purpose: provider.project_purpose,
       };
+      formProduct.general.project_purpose = provider.project_purpose
       formProduct.providers.push(providerObject);
     });
 
@@ -103,8 +103,8 @@ const stacToForm = (stac) => {
         doc_link: docLink[0],
         organization_email: contact.emails[0].value,
         ORCID_ID: contact.ORCID_ID,
-        project_purpose: contact.project_purpose,
       };
+      formProduct.general.project_purpose = contact.project_purpose
       formProduct.providers.push(providerObject);
     });
   formProduct.identifier = stac.id;
@@ -115,6 +115,7 @@ const stacToForm = (stac) => {
   formProduct.keywords = stac.properties.keywords;
   formProduct.documentation = stac.properties.documentation;
   formProduct.general.area_cover = stac.properties.area_cover;
+  if (stac.properties["project:purpose"]) formProduct.general.project_purpose = stac.properties["project:purpose"];
   formProduct.general.crs = stac.properties["proj:code"]
     ? stac.properties["proj:code"].split(":")[1]
     : stac.properties.crs &&
@@ -237,8 +238,8 @@ const stacToForm = (stac) => {
     stac.properties.wasDerivedFrom || stac.properties.source_data;
   formProduct.was_generated_by =
     stac.properties.wasGeneratedBy || stac.properties.models;
-  formProduct.data_quality = stac.properties.data_quality;
-  formProduct.quality_control = stac.properties.quality_control;
+  formProduct.data_quality = stac.properties.data_quality || stac.properties["validate:quality_measures"];
+  formProduct.quality_control = stac.properties.quality_control || (stac.properties["validate:workflow"] && stac.properties["validate:workflow"].href)
   formProduct.metadata_standards = stac.properties.metadata_standards;
   formProduct.distributions = stac.properties.distributions;
   formProduct.access_control = stac.properties.access_control;
@@ -337,7 +338,6 @@ const formToStac = async (formProduct) => {
           ]
         : null,
       identifier: provider.ORCID_ID,
-      project_purpose: provider.project_purpose,
     };
 
     if (provider.doc_link) {
@@ -415,6 +415,7 @@ const formToStac = async (formProduct) => {
   stac.properties.dataSource = formProduct.dataSource;
   stac.properties.description = formProduct.description;
   stac.properties.area_cover = formProduct.general.area_cover;
+  stac.properties["project:purpose"] = formProduct.general.project_purpose;
   stac.properties.documentation = formProduct.documentation;
   stac.properties["proj:code"] =
     formProduct.general.crs && `EPSG:${formProduct.general.crs}`;
@@ -626,8 +627,15 @@ const formToStac = async (formProduct) => {
   stac.properties.preprocessing = formProduct.preprocessing;
   stac.wasDerivedFrom = formProduct.was_derived_from;
   stac.properties.wasGeneratedBy = formProduct.was_generated_by;
-  stac.properties.data_quality = formProduct.data_quality;
-  stac.properties.quality_control = formProduct.quality_control;
+  stac.properties["validate:quality_measures"] = formProduct.data_quality;
+  if (formProduct.quality_control) {
+    stac.properties["validate:workflow"] = {
+      rel: "related",
+      href:formProduct.quality_control
+    }
+
+  }
+
   stac.properties.metadata_standards = formProduct.metadata_standards;
 
   stac.properties.distributions = formProduct.distributions;
@@ -801,7 +809,28 @@ const formToStac = async (formProduct) => {
       1
     );
   }
-
+  if (
+    (stac.properties["validate:workflow"] || stac.properties["validate:quality_measures"] )&&
+    !stac.stac_extensions.includes(
+      "https://raw.githubusercontent.com/baloola/validate/refs/heads/main/json-schema/schema.json"
+    )
+  ) {
+    stac.stac_extensions.push(
+      "https://raw.githubusercontent.com/baloola/validate/refs/heads/main/json-schema/schema.json"
+    );
+  } else if (
+    !(stac.properties["validate:workflow"] || stac.properties["validate:quality_measures"] ) &&
+    stac.stac_extensions.includes(
+      "https://raw.githubusercontent.com/baloola/validate/refs/heads/main/json-schema/schema.json"
+    )
+  ) {
+    stac.stac_extensions.splice(
+      stac.stac_extensions.indexOf(
+        "https://raw.githubusercontent.com/baloola/validate/refs/heads/main/json-schema/schema.json"
+      ),
+      1
+    );
+  }
   return {
     stac: stac,
     state: itemState,
