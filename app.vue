@@ -422,7 +422,7 @@ async function submit(values) {
 
       <FormKit type="group" name="general">
         <FormKit type="text" name="project_purpose" label="Project Purpose" />
-        <FormKit type="text" name="area_cover" label="total area cover" />
+        <FormKit type="text" name="area_cover" label="Total Area Cover" />
         <FormKit
           type="text"
           name="crs"
@@ -447,7 +447,7 @@ async function submit(values) {
           <div class="group form-group">
             <FormKit
               type="url"
-              label="Source"
+              label="Location"
               name="href"
               placeholder="https://www.example.com..."
               help="The link to the source of the dataset."
@@ -475,7 +475,7 @@ async function submit(values) {
             <FormKit
               type="text"
               name="name"
-              label="name"
+              label="Name"
               help="The name of the data asset"
               :validation-rules="{ distinct }"
               :validation-messages="{
@@ -699,7 +699,7 @@ async function submit(values) {
             required:
               'resolution as a float is required, you can submit now successfully but the validation test will fail.',
           }"
-          label="X Resolution"
+          label="X-Resolution"
           help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
           v-if="product.horizontal_axis.regular"
         />
@@ -713,7 +713,7 @@ async function submit(values) {
               'resolution as a float is required, you can submit now successfully but the validation test will fail.',
           }"
           name="y_resolution"
-          label="Y Resolution"
+          label="Y-Resolution"
           help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
           v-if="product.horizontal_axis.regular"
         />
@@ -734,14 +734,14 @@ async function submit(values) {
             <br />
             <FormKit
               type="text"
-              label="bottom bound"
+              label="Bottom Bound"
               number
               validation="number"
               help="lower bound"
             />
             <FormKit
               type="text"
-              label="top bound"
+              label="Top Bound"
               number
               validation="number"
               help="Upper bound"
@@ -802,13 +802,13 @@ async function submit(values) {
               <br />
               <FormKit
                 type="datetime-local"
-                label="begin time *"
+                label="Begin Time *"
                 step="1"
                 validation=""
               />
               <FormKit
                 type="datetime-local"
-                label="end time *"
+                label="End Time *"
                 step="1"
                 validation=""
               />
@@ -1056,7 +1056,7 @@ async function submit(values) {
           :index="index"
         >
           <div class="group form-group">
-            <FormKit type="text" name="band_name" label="Cell Components" />
+            <FormKit type="text" name="band_name" label="Range Type" />
             <FormKit type="text" name="unit" label="Unit of Measure" />
             <FormKit
               label="Data Type"
@@ -1267,7 +1267,7 @@ async function submit(values) {
         }"
         label="Keywords"
       />
-      <h2 class="title">Provenance</h2>
+      <h2 class="title">Provenance (Data Origin)</h2>
       <FormKit type="text" name="provenance_name" label="Origin" />
       <FormKit
         type="text"
@@ -1281,7 +1281,7 @@ async function submit(values) {
       />
       <FormKit type="url" name="was_derived_from" label="Source Data (links)" />
       <FormKit type="url" name="was_generated_by" label="Models (Links)" />
-      <h2 class="title">Data Quality</h2>
+      <h2 class="title">Data Validation</h2>
       <FormKit
         type="url"
         label="Quality Measures"
