@@ -13,9 +13,11 @@ const stacToForm = (stac) => {
   let formProduct = {
     state: "created",
     providers: [],
-    third: {
-      threeD: true,
-    },
+    time_dims:[{
+      time_axis:{
+
+      }
+    }],
     assets: [],
     thumbnails: [],
     apis: [],
@@ -23,9 +25,12 @@ const stacToForm = (stac) => {
     horizontal_axis: {
       bbox: { x: [null, null], y: [null, null] },
     },
-    vertical_axis: {
-      bbox: [null, null],
-    },
+    verticals:[{
+      vertical_axis: {
+        bbox: [null, null],
+      }}
+    ]
+    ,
     time_axis: {
       regular: true,
     },
@@ -137,13 +142,14 @@ const stacToForm = (stac) => {
   formProduct.horizontal_axis.y_resolution = v_axis.step;
   formProduct.horizontal_axis.regular = h_axis.values === undefined;
   if (z_axis) {
-    formProduct.vertical_axis.bbox = z_axis.extent || [];
-    formProduct.vertical_axis.values = z_axis.values || [];
-    formProduct.vertical_axis.vertical_crs = z_axis.reference_system;
-    formProduct.vertical_axis.unit_of_measure = z_axis.unit;
-    formProduct.vertical_axis.interpolation = z_axis.interpolation;
-    formProduct.vertical_axis.resolution = z_axis.step;
-    formProduct.vertical_axis.regular = z_axis.values === undefined;
+    const vertical_axis = formProduct.verticals[0].vertical_axis
+    vertical_axis.bbox = z_axis.extent || [];
+    vertical_axis.values = z_axis.values || [];
+    vertical_axis.vertical_crs = z_axis.reference_system;
+    vertical_axis.unit_of_measure = z_axis.unit;
+    vertical_axis.interpolation = z_axis.interpolation;
+    vertical_axis.resolution = z_axis.step;
+    vertical_axis.regular = z_axis.values === undefined;
   }
 
   Object.keys(cube)
@@ -163,6 +169,7 @@ const stacToForm = (stac) => {
 
   let timeDim = cube.time || cube.t;
   if (timeDim) {
+    const time_axis = formProduct.time_dims[0].time_axis
     let range =
       timeDim.extent &&
       Array.isArray(timeDim.extent) &&
@@ -181,27 +188,25 @@ const stacToForm = (stac) => {
       Array.isArray(timeDim.extent) &&
       timeDim.extent.length === 2
     ) {
-      formProduct.time_axis.bbox = range;
-      formProduct.time_axis.regular = true;
+      time_axis.bbox = range;
+      time_axis.regular = true;
     } else {
-      formProduct.time_axis.values = range;
-      formProduct.time_axis.regular = false;
+      time_axis.values = range;
+      time_axis.regular = false;
     }
-    formProduct.time_axis.unit_of_measure = timeDim.unit;
-    formProduct.time_axis.interpolation = timeDim.interpolation;
+    time_axis.unit_of_measure = timeDim.unit;
+    time_axis.interpolation = timeDim.interpolation;
 
-    if (timeDim.step !== undefined) formProduct.time_axis.step = {};
+    if (timeDim.step !== undefined) time_axis.step = {};
     if (typeof timeDim.step === "string" && timeDim.step.startsWith("P")) {
       let parsedStep = parse(timeDim.step);
-      formProduct.time_axis.step.Y = parsedStep.years;
-      formProduct.time_axis.step.M = parsedStep.months;
-      formProduct.time_axis.step.D = parsedStep.days;
-      formProduct.time_axis.step.H = parsedStep.hours;
-      formProduct.time_axis.step.Ms = parsedStep.minutes;
-      formProduct.time_axis.step.S = parsedStep.seconds;
+      time_axis.step.Y = parsedStep.years;
+      time_axis.step.M = parsedStep.months;
+      time_axis.step.D = parsedStep.days;
+      time_axis.step.H = parsedStep.hours;
+      time_axis.step.Ms = parsedStep.minutes;
+      time_axis.step.S = parsedStep.seconds;
     }
-  } else {
-    formProduct.third.threeD = false;
   }
 
   const bands = stac.properties["bands"] || stac.properties["raster:bands"];
@@ -441,18 +446,21 @@ const formToStac = async (formProduct) => {
   h_axis.interpolation = formProduct.horizontal_axis.interpolation;
   h_axis.step = formProduct.horizontal_axis.x_resolution;
   v_axis.step = formProduct.horizontal_axis.y_resolution;
+  if (formProduct.verticals.length == 1) {
+    const vertical_axis = formProduct.verticals[0].vertical_axis
+    vertical_axis.regular
+      ? (z_axis.extent = vertical_axis.bbox)
+      : (z_axis.values = vertical_axis.values);
 
-  formProduct.vertical_axis.regular
-    ? (z_axis.extent = formProduct.vertical_axis.bbox)
-    : (z_axis.values = formProduct.vertical_axis.values);
-
-  z_axis.reference_system = formProduct.vertical_axis.vertical_crs;
-  z_axis.unit = formProduct.vertical_axis.unit_of_measure;
-  z_axis.interpolation = formProduct.vertical_axis.interpolation;
-  z_axis.step = formProduct.vertical_axis.resolution;
-  if (z_axis.extent !== undefined || z_axis.extent !== undefined) {
-    z_axis.type = "spatial";
+    z_axis.reference_system = vertical_axis.vertical_crs;
+    z_axis.unit = vertical_axis.unit_of_measure;
+    z_axis.interpolation = vertical_axis.interpolation;
+    z_axis.step = vertical_axis.resolution;
+    if (z_axis.extent !== undefined || z_axis.extent !== undefined) {
+      z_axis.type = "spatial";
+    }
   }
+
 
   formProduct.other_dims.map((dim) => {
     cube[dim.name] = {
@@ -502,12 +510,13 @@ const formToStac = async (formProduct) => {
     ];
   }
 
-  if (formProduct.third.threeD === true) {
+  if (formProduct.time_dims.length == 1) {
+    const time_axis = formProduct.time_dims[0].time_axis
     let range =
-      formProduct.time_axis.bbox !== undefined &&
-      Array.isArray(formProduct.time_axis.bbox)
-        ? formProduct.time_axis.bbox
-        : formProduct.time_axis.values;
+      time_axis.bbox !== undefined &&
+      Array.isArray(time_axis.bbox)
+        ? time_axis.bbox
+        : time_axis.values;
     if (range && Array.isArray(range)) {
       if ([undefined, null, ""].includes(range[1])) {
         range[1] = "2999-01-01T00:00:00";
@@ -534,9 +543,9 @@ const formToStac = async (formProduct) => {
     let hasDates = false;
     let times = "T";
     let hasTimes = false;
-    formProduct.time_axis.step !== undefined &&
-      Object.keys(formProduct.time_axis.step).map((unit) => {
-        let ts = formProduct.time_axis.step;
+    time_axis.step !== undefined &&
+      Object.keys(time_axis.step).map((unit) => {
+        let ts = time_axis.step;
         if (ts[unit] !== undefined)
           if (["Y", "M", "D"].includes(unit)) {
             hasDates = true;
@@ -547,16 +556,16 @@ const formToStac = async (formProduct) => {
           }
       });
 
-    formProduct.time_axis.bbox !== undefined &&
-    Array.isArray(formProduct.time_axis.bbox)
+    time_axis.bbox !== undefined &&
+    Array.isArray(time_axis.bbox)
       ? (cube.time.extent = range)
       : (cube.time.values = range);
     dates = hasDates ? dates : "";
     times = hasTimes ? times.replace("Ms", "M") : "";
 
     cube.time.step = `${dates}${times}`;
-    cube.time.unit = formProduct.time_axis.unit_of_measure;
-    cube.time.interpolation = formProduct.time_axis.interpolation;
+    cube.time.unit = time_axis.unit_of_measure;
+    cube.time.interpolation = time_axis.interpolation;
   }
   const bands = formProduct.bands;
   let keywords =

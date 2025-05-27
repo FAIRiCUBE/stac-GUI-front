@@ -337,7 +337,7 @@ async function submit(values) {
                   <FormKit
                     v-if="item.pull"
                     type="button"
-                    label="link"
+                    label="Link"
                     suffix-icon="github"
                     style="background-color: black; max-width: inherit"
                     help=""
@@ -359,7 +359,7 @@ async function submit(values) {
       dirty-behavior="compare"
       :actions="false"
     >
-      <FormKit type="button" label="back" @click="openBackModal" />
+      <FormKit type="button" label="Back" @click="openBackModal" />
       <FormKit
         type="radio"
         name="platform"
@@ -426,7 +426,7 @@ async function submit(values) {
         <FormKit
           type="text"
           name="crs"
-          help="reference system number in EPSG format e.g(4326)"
+          help="Reference system number in EPSG format e.g(4326)"
           label="CRS"
         />
       </FormKit>
@@ -488,7 +488,7 @@ async function submit(values) {
               type="button"
               label="Remove"
               style="background-color: red"
-              help="remove asset"
+              help="Remove asset"
               @click="() => node.input(value.filter((_, i) => i !== index))"
             />
           </div>
@@ -564,7 +564,7 @@ async function submit(values) {
               type="button"
               label="Remove"
               style="background-color: red"
-              help="remove organization"
+              help="Remove organization"
               @click="() => node.input(value.filter((_, i) => i !== index))"
             />
           </div>
@@ -589,10 +589,10 @@ async function submit(values) {
             required:
               'reference system is required, you can submit now successfully but the validation test will fail.',
           }"
-          help="reference system number in EPSG format e.g(4326)"
+          help="Reference system number in EPSG format e.g(4326)"
           placeholder="4326"
         />
-        <FormKit type="checkbox" name="regular" label="regular ?" />
+        <FormKit type="checkbox" name="regular" label="Regular ?" />
         <FormKit type="group" name="bbox">
           <FormKit type="list" name="x">
             <div class="bbox">
@@ -622,7 +622,7 @@ async function submit(values) {
                     'all bbox values are required, you can submit now successfully but the validation test will fail.',
                 }"
                 placeholder="180.0"
-                help="East Boound"
+                help="East Bound"
               />
             </div>
           </FormKit>
@@ -718,240 +718,298 @@ async function submit(values) {
           v-if="product.horizontal_axis.regular"
         />
       </FormKit>
-      <FormKit type="group" name="vertical_axis">
-        <h2 class="title">Vertical Axis</h2>
+      <FormKit
+        type="list"
+        dynamic
+        #default="{ items, node, value }"
+        name="verticals"
+      >
+      <h2 class="title">Vertical Axis</h2>
         <FormKit
-          type="text"
-          name="vertical_crs"
-          label="Vertical CRS"
-          help="reference system number in EPSG format e.g(4326)"
-          placeholder="3855"
-        />
-        <FormKit type="checkbox" name="regular" label="regular ?" />
-        <FormKit type="list" name="bbox" v-if="product.vertical_axis.regular">
-          <div class="bbox">
-            <h4 class="title" style="padding: 0.5em">Lower/Upper Bound</h4>
-            <br />
+          type="group"
+          name="vertical"
+          v-for="(item, index) in items"
+          :key="item"
+          :index="index"
+        >
+
+          <FormKit type="group" name="vertical_axis">
             <FormKit
               type="text"
-              label="Bottom Bound"
-              number
-              validation="number"
-              help="lower bound"
+              name="vertical_crs"
+              label="Vertical CRS"
+              help="Reference system number in EPSG format e.g(4326)"
+              placeholder="3855"
+            />
+            <FormKit type="checkbox" name="regular" label="Regular ?" />
+            <FormKit
+              type="list"
+              name="bbox"
+              v-if="product.verticals[0].vertical_axis.regular"
+            >
+              <div class="bbox">
+                <h4 class="title" style="padding: 0.5em">Lower/Upper Bound</h4>
+                <br />
+                <FormKit
+                  type="text"
+                  label="Bottom Bound"
+                  number
+                  validation="number"
+                  help="Lower bound"
+                />
+                <FormKit
+                  type="text"
+                  label="Top Bound"
+                  number
+                  validation="number"
+                  help="Upper bound"
+                />
+              </div>
+            </FormKit>
+            <FormKit
+              type="text"
+              name="values"
+              label="Vertical Axis Values"
+              v-if="!product.verticals[0].vertical_axis.regular"
             />
             <FormKit
               type="text"
-              label="Top Bound"
-              number
-              validation="number"
-              help="Upper bound"
+              name="unit_of_measure"
+              label="Unit of Measure"
+              placeholder="Meters"
             />
-          </div>
+            <FormKit
+              type="text"
+              name="interpolation"
+              label="Interpolation/Aggregation"
+            />
+            <FormKit
+              type="text"
+              name="resolution"
+              label="Resolution"
+              help="Resolution (or 'irregular'). Should be 1 value as required by UC, not all resolutions of dataset"
+              v-if="product.verticals[0].vertical_axis.regular"
+            />
+            <FormKit
+              type="button"
+              label="Remove"
+              style="background-color: red"
+              help="Remove the time dimension(Axis)"
+              @click="() => node.input(value.filter((_, i) => i !== index))"
+            />
+          </FormKit>
         </FormKit>
         <FormKit
-          type="text"
-          name="values"
-          label="Vertical Axis Values"
-          v-if="!product.vertical_axis.regular"
-        />
-        <FormKit
-          type="text"
-          name="unit_of_measure"
-          label="Unit of Measure"
-          placeholder="Meters"
-        />
-        <FormKit
-          type="text"
-          name="interpolation"
-          label="Interpolation/Aggregation"
-        />
-        <FormKit
-          type="text"
-          name="resolution"
-          label="Resolution"
-          help="Resolution (or 'irregular'). Should be 1 value as required by UC, not all resolutions of dataset"
-          v-if="product.vertical_axis.regular"
+          type="button"
+          label="+ Add vertical dimension"
+          help="Add vertical dimension(Axis)"
+          v-if="node.children.length == 0"
+          @click="() => node.input(value.concat({}))"
         />
       </FormKit>
+
       <br />
-      <FormKit type="group" name="third">
+      <FormKit
+        type="list"
+        dynamic
+        #default="{ items, node, value }"
+        name="time_dims"
+      >
         <div class="bbox" style="flex-direction: column">
-          <FormKit type="checkbox" name="threeD" label="3D" />
+          <!-- <FormKit type="checkbox" name="threeD" label="3D" /> -->
           <h2 class="title">Time Axis</h2>
         </div>
-      </FormKit>
+        <FormKit
+          type="group"
+          name="third"
+          v-for="(item, index) in items"
+          :key="item"
+          :index="index"
+        >
+          <FormKit type="group" name="time_axis">
+            <div class="group form-group">
+              <FormKit type="checkbox" name="regular" label="Regular ?" />
 
-      <FormKit
-        type="group"
-        name="time_axis"
-        v-if="product.third && product.third.threeD"
-      >
-        <div class="group form-group">
-          <FormKit type="checkbox" name="regular" label="regular ?" />
-
-          <FormKit
-            type="list"
-            name="bbox"
-            v-if="product.time_axis.regular"
-            validation="required"
-          >
-            <div class="bbox">
-              <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
-                Begin Time/End Time
-              </h4>
-              <br />
               <FormKit
-                type="datetime-local"
-                label="Begin Time *"
-                step="1"
-                validation=""
-              />
-              <FormKit
-                type="datetime-local"
-                label="End Time *"
-                step="1"
-                validation=""
-              />
-            </div>
-          </FormKit>
+                type="list"
+                name="bbox"
+                v-if="product.time_dims[0].time_axis.regular"
+                validation="required"
+              >
+                <div class="bbox">
+                  <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
+                    Begin Time/End Time
+                  </h4>
+                  <br />
+                  <FormKit
+                    type="datetime-local"
+                    label="Begin Time *"
+                    step="1"
+                    validation=""
+                  />
+                  <FormKit
+                    type="datetime-local"
+                    label="End Time *"
+                    step="1"
+                    validation=""
+                  />
+                </div>
+              </FormKit>
 
-          <div v-auto-animate>
-            <FormKit
-              label="Values *"
-              name="values"
-              type="list"
-              dynamic
-              #default="{ node, items, value }"
-              v-if="!product.time_axis.regular"
-              validation="required"
-            >
-              <div v-for="(item, index) in items" :key="item" class="todo">
+              <div v-auto-animate>
                 <FormKit
-                  type="datetime-local"
-                  step="1"
-                  style="max-width: fit-content"
-                  name="datetime"
-                  :index="index"
-                />
-                <ul class="controls">
-                  <li>
-                    <button
-                      type="button"
-                      @click="
-                        () => node.input(value.filter((_, i) => i !== index))
-                      "
-                      class="button close"
-                    >
-                      <FormKitIcon icon="close" />
-                    </button>
-                  </li>
-                </ul>
+                  label="Values *"
+                  name="values"
+                  type="list"
+                  dynamic
+                  #default="{ node, items, value }"
+                  v-if="!product.time_dims[0].time_axis.regular"
+                  validation="required"
+                >
+                  <div v-for="(item, index) in items" :key="item" class="todo">
+                    <FormKit
+                      type="datetime-local"
+                      step="1"
+                      style="max-width: fit-content"
+                      name="datetime"
+                      :index="index"
+                    />
+                    <ul class="controls">
+                      <li>
+                        <button
+                          type="button"
+                          @click="
+                            () =>
+                              node.input(value.filter((_, i) => i !== index))
+                          "
+                          class="button close"
+                        >
+                          <FormKitIcon icon="close" />
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                  <FormKit
+                    type="button"
+                    style="background-color: gray"
+                    @click="() => node.input(value.concat({}))"
+                    >+</FormKit
+                  >
+                </FormKit>
               </div>
               <FormKit
-                type="button"
-                style="background-color: gray"
-                @click="() => node.input(value.concat({}))"
-                >+</FormKit
-              >
-            </FormKit>
-          </div>
-          <FormKit
-            type="text"
-            name="unit_of_measure"
-            validation="?required"
-            validation-visibility="live"
-            :validation-messages="{
-              required:
-                'unit of measure is required, you can submit now successfully but the validation test will fail.',
-            }"
-            label="Unit of Measure"
-            placeholder="minute"
-          />
-          <FormKit
-            type="text"
-            name="interpolation"
-            label="Interpolation/Aggregation"
-          />
+                type="text"
+                name="unit_of_measure"
+                validation="?required"
+                validation-visibility="live"
+                :validation-messages="{
+                  required:
+                    'unit of measure is required, you can submit now successfully but the validation test will fail.',
+                }"
+                label="Unit of Measure"
+                placeholder="minute"
+              />
+              <FormKit
+                type="text"
+                name="interpolation"
+                label="Interpolation/Aggregation"
+              />
 
-          <FormKit
-            type="group"
-            v-if="product.time_axis.regular"
-            validation-visibility="live"
-            :validation-rules="{ validateTimeStep }"
-            validation="?validateTimeStep"
-            :validation-messages="{
-              validateTimeStep:
-                'Time resolution is required, you can submit now successfully but the validation test will fail.',
-            }"
-            id="timeGroup"
-            name="step"
-            label="Resolution"
-            help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
-          >
-            <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
-              Resolution
-            </h4>
-            <div>
-              <FormKitMessages />
+              <FormKit
+                type="group"
+                v-if="product.time_dims[0].time_axis.regular"
+                validation-visibility="live"
+                :validation-rules="{ validateTimeStep }"
+                validation="?validateTimeStep"
+                :validation-messages="{
+                  validateTimeStep:
+                    'Time resolution is required, you can submit now successfully but the validation test will fail.',
+                }"
+                id="timeGroup"
+                name="step"
+                label="Resolution"
+                help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
+              >
+                <h4 class="title" style="padding: 0.5em; padding-top: 0.5em">
+                  Resolution
+                </h4>
+                <div>
+                  <FormKitMessages />
+                </div>
+                <div style="display: flex; flex-wrap: nowrap">
+                  <FormKit
+                    type="number"
+                    number
+                    min="0"
+                    max="100"
+                    step="1"
+                    name="Y"
+                    label="Years"
+                  />
+                  <FormKit
+                    type="number"
+                    number
+                    min="0"
+                    max="12"
+                    step="1"
+                    name="M"
+                    label="Months"
+                  />
+                  <FormKit
+                    type="number"
+                    min="0"
+                    max="30"
+                    step="1"
+                    number
+                    name="D"
+                    label="Days"
+                  />
+                  <FormKit
+                    type="number"
+                    number
+                    min="0"
+                    max="24"
+                    step="1"
+                    name="H"
+                    label="Hours"
+                  />
+                  <FormKit
+                    type="number"
+                    min="0"
+                    max="60"
+                    step="1"
+                    number
+                    name="Ms"
+                    label="Minutes"
+                  />
+                  <FormKit
+                    type="number"
+                    min="0"
+                    max="60"
+                    step="1"
+                    number
+                    name="S"
+                    label="Seconds"
+                  />
+                </div>
+              </FormKit>
             </div>
-            <div style="display: flex; flex-wrap: nowrap">
-              <FormKit
-                type="number"
-                number
-                min="0"
-                max="100"
-                step="1"
-                name="Y"
-                label="Years"
-              />
-              <FormKit
-                type="number"
-                number
-                min="0"
-                max="12"
-                step="1"
-                name="M"
-                label="Months"
-              />
-              <FormKit
-                type="number"
-                min="0"
-                max="30"
-                step="1"
-                number
-                name="D"
-                label="Days"
-              />
-              <FormKit
-                type="number"
-                number
-                min="0"
-                max="24"
-                step="1"
-                name="H"
-                label="Hours"
-              />
-              <FormKit
-                type="number"
-                min="0"
-                max="60"
-                step="1"
-                number
-                name="Ms"
-                label="Minutes"
-              />
-              <FormKit
-                type="number"
-                min="0"
-                max="60"
-                step="1"
-                number
-                name="S"
-                label="Seconds"
-              />
-            </div>
+            <FormKit
+              type="button"
+              label="Remove"
+              style="background-color: red"
+              help="Remove the time dimension(Axis)"
+              @click="() => node.input(value.filter((_, i) => i !== index))"
+            />
           </FormKit>
-        </div>
+        </FormKit>
+        <FormKit
+          type="button"
+          label="+ Add Time dimension"
+          help="Add time dimension(Axis)"
+          v-if="node.children.length == 0"
+          @click="() => node.input(value.concat({}))"
+        />
       </FormKit>
       <FormKit
         type="list"
@@ -971,30 +1029,30 @@ async function submit(values) {
               type="text"
               name="name"
               label="Name"
-              help="name of the dimension"
+              help="Name of the dimension"
             />
             <FormKit
               type="text"
               name="crs"
               label="CRS"
-              help="reference system number in EPSG format e.g(4326)"
+              help="Reference system number in EPSG format e.g(4326)"
               placeholder="4326"
             />
-            <FormKit type="checkbox" name="regular" label="regular ?" />
+            <FormKit type="checkbox" name="regular" label="Regular ?" />
             <FormKit type="list" name="bbox">
               <div class="bbox">
                 <h4 class="title" style="padding: 0.5em">Lower/Upper Value</h4>
                 <br />
                 <FormKit
                   type="text"
-                  label="bottom left lat"
+                  label="Bottom left lat"
                   number
                   validation="number"
                   help="Upper Bound"
                 />
                 <FormKit
                   type="text"
-                  label="bottom left long"
+                  label="Bottom left long"
                   number
                   validation="number"
                   help="Lower Bound"
@@ -1022,14 +1080,14 @@ async function submit(values) {
             <FormKit
               type="text"
               name="values"
-              label="values"
+              label="Values"
               v-if="!value[index].regular"
             />
             <FormKit
               type="button"
               label="Remove"
               style="background-color: red"
-              help="remove the extra dimension(Axis)"
+              help="Remove the extra dimension(Axis)"
               @click="() => node.input(value.filter((_, i) => i !== index))"
             />
           </div>
@@ -1133,7 +1191,7 @@ async function submit(values) {
                     type="button"
                     label="-"
                     style="background-color: red"
-                    help="remove a class"
+                    help="Remove a class"
                     @click="
                       () => node.input(value.filter((_, i) => i !== index))
                     "
@@ -1155,7 +1213,7 @@ async function submit(values) {
               type="button"
               label="Remove"
               style="background-color: red"
-              help="remove band"
+              help="Remove band"
               @click="() => node.input(value.filter((_, i) => i !== index))"
             />
           </div>
@@ -1193,14 +1251,14 @@ async function submit(values) {
             <FormKit
               type="text"
               name="name"
-              label="name"
+              label="Name"
               help="The name of the thumbnail"
             />
             <FormKit
               type="button"
               label="Remove"
               style="background-color: red"
-              help="remove thumbnail"
+              help="Remove thumbnail"
               @click="() => node.input(value.filter((_, i) => i !== index))"
             />
           </div>
@@ -1219,7 +1277,7 @@ async function submit(values) {
           type="text"
           name="re_projection_crs"
           label="Re-projection CRS"
-          help="reference system number in EPSG format e.g(4326)"
+          help="Reference system number in EPSG format e.g(4326)"
           placeholder="4326"
         />
         <FormKit type="text" name="unit_of_measure" label="Unit of Measure" />
@@ -1244,13 +1302,13 @@ async function submit(values) {
           type="url"
           placeholder="https://www.example.com..."
           name="license_link"
-          label="link"
+          label="Link"
           v-if="product.legal.license === 'proprietary'"
           validation="required"
           :validation-messages="{
             required: 'if you select Other as license, please specify a link!',
           }"
-          help="please provide a link to the license text"
+          help="Please provide a link to the license text"
         />
 
         <FormKit type="text" name="personalData" label="Personal Data" />
@@ -1295,7 +1353,7 @@ async function submit(values) {
       <FormKit
         type="text"
         name="metadata_standards"
-        label="(Meta)Data Standers"
+        label="(Meta)Data Standards"
       />
       <FormKit
         type="list"
@@ -1315,7 +1373,7 @@ async function submit(values) {
               type="checkbox"
               name="script"
               label="Script"
-              help="check if the provided link points directly to a script code, uncheck it if it points to an html, Notebook.. etc"
+              help="Check if the provided link points directly to a script code, uncheck it if it points to an html, Notebook.. etc"
             />
             <FormKit
               type="url"
@@ -1344,7 +1402,7 @@ async function submit(values) {
               type="button"
               label="Remove"
               style="background-color: red"
-              help="remove Resource"
+              help="Remove Resource"
               @click="() => node.input(value.filter((_, i) => i !== index))"
             />
           </div>
@@ -1439,7 +1497,7 @@ async function submit(values) {
         :options="members"
         help="Select your Github name from the list to be assigned. "
       />
-      <FormKit type="submit" @submit="submit" label="save" :disabled="!dirty" />
+      <FormKit type="submit" @submit="submit" label="Save" :disabled="!dirty" />
       <!-- <pre>{{ dirty }}</pre> -->
     </FormKit>
   </div>
