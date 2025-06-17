@@ -246,7 +246,6 @@ const stacToForm = (stac) => {
   formProduct.data_quality = stac.properties.data_quality || stac.properties["validate:quality_measures"];
   formProduct.quality_control = stac.properties.quality_control || (stac.properties["validate:workflow"] && stac.properties["validate:workflow"].href)
   formProduct.metadata_standards = stac.properties.metadata_standards;
-  formProduct.distributions = stac.properties.distributions;
   formProduct.access_control = stac.properties.access_control;
 
   formProduct.provision = stac.properties.provision
@@ -647,7 +646,6 @@ const formToStac = async (formProduct) => {
 
   stac.properties.metadata_standards = formProduct.metadata_standards;
 
-  stac.properties.distributions = formProduct.distributions;
   stac.properties.access_control = formProduct.access_control;
 
   let productTime = formProduct.datetime;

@@ -401,7 +401,7 @@ async function submit(values) {
         validation-visibility="live"
         :validation-messages="{
           required:
-            'description is required, you can submit now successfully but the validation test will fail.',
+            'Description is required, you can submit now successfully but the validation test will fail.',
         }"
         label="Description"
         help="Brief, nontechnical explanation of the datacube."
@@ -524,7 +524,7 @@ async function submit(values) {
               validation-visibility="live"
               :validation-messages="{
                 require_one:
-                  'organization or name value is required, you can submit now successfully but the validation test will fail.',
+                  'Organization or name value is required, you can submit now successfully but the validation test will fail.',
               }"
               help="The name of the organization which produced the dataset."
             />
@@ -536,7 +536,7 @@ async function submit(values) {
               validation-visibility="live"
               :validation-messages="{
                 require_one:
-                  'organization or name value is required, you can submit now successfully but the validation test will fail.',
+                  'Organization or name value is required, you can submit now successfully but the validation test will fail.',
               }"
               help="The name of the organization which produced the dataset."
             />
@@ -587,7 +587,7 @@ async function submit(values) {
           validation-visibility="live"
           :validation-messages="{
             required:
-              'reference system is required, you can submit now successfully but the validation test will fail.',
+              'Reference system is required, you can submit now successfully but the validation test will fail.',
           }"
           help="Reference system number in EPSG format e.g(4326)"
           placeholder="4326"
@@ -606,7 +606,7 @@ async function submit(values) {
                 validation-visibility="live"
                 :validation-messages="{
                   required:
-                    'all bbox values are required, you can submit now successfully but the validation test will fail.',
+                    'All bbox values are required, you can submit now successfully but the validation test will fail.',
                 }"
                 placeholder="-180.0"
                 help="West Bound"
@@ -619,7 +619,7 @@ async function submit(values) {
                 validation-visibility="live"
                 :validation-messages="{
                   required:
-                    'all bbox values are required, you can submit now successfully but the validation test will fail.',
+                    'All bbox values are required, you can submit now successfully but the validation test will fail.',
                 }"
                 placeholder="180.0"
                 help="East Bound"
@@ -638,7 +638,7 @@ async function submit(values) {
                 validation-visibility="live"
                 :validation-messages="{
                   required:
-                    'all bbox values are required, you can submit now successfully but the validation test will fail.',
+                    'All bbox values are required, you can submit now successfully but the validation test will fail.',
                 }"
                 placeholder="-90.0"
                 help="South Bound"
@@ -651,7 +651,7 @@ async function submit(values) {
                 validation-visibility="live"
                 :validation-messages="{
                   required:
-                    'all bbox values are required, you can submit now successfully but the validation test will fail.',
+                    'All bbox values are required, you can submit now successfully but the validation test will fail.',
                 }"
                 placeholder="90.0"
                 help="North Bound"
@@ -679,7 +679,7 @@ async function submit(values) {
           validation-visibility="live"
           :validation-messages="{
             required:
-              'unit of measure is required, you can submit now successfully but the validation test will fail.',
+              'Unit of measure is required, you can submit now successfully but the validation test will fail.',
           }"
           label="Unit of Measure"
           placeholder="degree"
@@ -697,7 +697,7 @@ async function submit(values) {
           validation-visibility="live"
           :validation-messages="{
             required:
-              'resolution as a float is required, you can submit now successfully but the validation test will fail.',
+              'Resolution as a float is required, you can submit now successfully but the validation test will fail.',
           }"
           label="X-Resolution"
           help="Resolution. Should be 1 value as required by UC, not all resolutions of dataset"
@@ -710,7 +710,7 @@ async function submit(values) {
           validation-visibility="live"
           :validation-messages="{
             required:
-              'resolution as a float is required, you can submit now successfully but the validation test will fail.',
+              'Resolution as a float is required, you can submit now successfully but the validation test will fail.',
           }"
           name="y_resolution"
           label="Y-Resolution"
@@ -904,7 +904,7 @@ async function submit(values) {
                 validation-visibility="live"
                 :validation-messages="{
                   required:
-                    'unit of measure is required, you can submit now successfully but the validation test will fail.',
+                    'Unit of measure is required, you can submit now successfully but the validation test will fail.',
                 }"
                 label="Unit of Measure"
                 placeholder="minute"
@@ -1124,7 +1124,7 @@ async function submit(values) {
               validation-visibility="live"
               :validation-messages="{
                 required:
-                  'data type is required, you can submit now successfully but the validation test will fail.',
+                  'Data type is required, you can submit now successfully but the validation test will fail.',
               }"
               placeholder="Select a data type"
               :options="dataTypes"
@@ -1136,7 +1136,7 @@ async function submit(values) {
               validation-visibility="live"
               :validation-messages="{
                 required:
-                  'null value is required, you can submit now successfully but the validation test will fail.',
+                  'Null value is required, you can submit now successfully but the validation test will fail.',
               }"
               name="nodata"
               label="Null value"
@@ -1147,7 +1147,7 @@ async function submit(values) {
               validation-visibility="live"
               :validation-messages="{
                 required:
-                  'definition is required, you can submit now successfully but the validation test will fail.',
+                  'Definition is required, you can submit now successfully but the validation test will fail.',
               }"
               name="definition"
               label="Definition"
@@ -1159,7 +1159,7 @@ async function submit(values) {
               validation-visibility="live"
               :validation-messages="{
                 required:
-                  'description is required, you can submit now successfully but the validation test will fail.',
+                  'Description is required, you can submit now successfully but the validation test will fail.',
               }"
               label="Description"
             />
@@ -1294,7 +1294,7 @@ async function submit(values) {
           validation-visibility="live"
           :validation-messages="{
             required:
-              'license is required, you can submit now successfully but the validation test will fail.',
+              'License is required, you can submit now successfully but the validation test will fail.',
           }"
           :options="licensesData"
         />
@@ -1306,7 +1306,7 @@ async function submit(values) {
           v-if="product.legal.license === 'proprietary'"
           validation="required"
           :validation-messages="{
-            required: 'if you select Other as license, please specify a link!',
+            required: 'If you select Other as license, please specify a link!',
           }"
           help="Please provide a link to the license text"
         />
@@ -1321,7 +1321,7 @@ async function submit(values) {
         validation-visibility="live"
         :validation-messages="{
           required:
-            'keywords are required, you can submit now successfully but the validation test will fail.',
+            'Keywords are required, you can submit now successfully but the validation test will fail.',
         }"
         label="Keywords"
       />
@@ -1416,7 +1416,6 @@ async function submit(values) {
         />
       </FormKit>
 
-      <FormKit type="text" name="distributions" label="Distributions" />
       <FormKit type="text" name="access_control" label="Access Control" />
 
       <h2 class="title">Dates</h2>
