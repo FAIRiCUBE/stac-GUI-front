@@ -266,7 +266,7 @@ const stacToForm = (stac) => {
   formProduct.validation = stac.properties.validation;
 
   formProduct.platform =
-    stac.properties["project:platform"] ||
+    stac.properties["processing:facility"] ||
     stac.properties.platform ||
     stac.properties.datacube_platform;
   formProduct.state = "edited";
@@ -325,6 +325,7 @@ const formToStac = async (formProduct) => {
     stac_extensions: [
       "https://stac-extensions.github.io/datacube/v2.0.0/schema.json",
       "https://raw.githubusercontent.com/baloola/project/refs/heads/main/json-schema/schema.json",
+      "https://stac-extensions.github.io/processing/v1.2.0/schema.json",
     ],
   };
 
@@ -681,7 +682,7 @@ const formToStac = async (formProduct) => {
   }
   stac.properties.ingestion_status = formProduct.ingestion_status;
   stac.properties.validation = formProduct.validation;
-  stac.properties["project:platform"] = formProduct.platform;
+  stac.properties["processing:facility"] = formProduct.platform;
   const itemState = formProduct.state || "created";
   const reviewers =
     formProduct.platform === "Eox"
