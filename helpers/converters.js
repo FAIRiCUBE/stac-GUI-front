@@ -244,7 +244,10 @@ const stacToForm = (stac) => {
   formProduct.was_generated_by =
     stac.properties.wasGeneratedBy || stac.properties.models;
   formProduct.data_quality = stac.properties.data_quality || stac.properties["validate:quality_measures"];
-  formProduct.quality_control = stac.properties.quality_control || (stac.properties["validate:workflow"] && stac.properties["validate:workflow"].href)
+  stac.links
+      .filter((link) => link.rel === "processing-validation")
+      .map((link) => (formProduct.quality_control = link.href));
+  formProduct.quality_control = formProduct.quality_control ? formProduct.quality_control : stac.properties.quality_control || (stac.properties["validate:workflow"] && stac.properties["validate:workflow"].href)
   formProduct.metadata_standards = stac.properties.metadata_standards;
   formProduct.access_control = stac.properties.access_control;
 
@@ -263,7 +266,6 @@ const stacToForm = (stac) => {
       formProduct[cases[useCase]] = 1;
     });
   formProduct.ingestion_status = stac.properties.ingestion_status;
-  formProduct.validation = stac.properties.validation;
 
   formProduct.platform =
     stac.properties["processing:facility"] ||
@@ -638,11 +640,11 @@ const formToStac = async (formProduct) => {
   stac.properties.wasGeneratedBy = formProduct.was_generated_by;
   stac.properties["validate:quality_measures"] = formProduct.data_quality;
   if (formProduct.quality_control) {
-    stac.properties["validate:workflow"] = {
-      rel: "related",
-      href:formProduct.quality_control
-    }
-
+    stac.links.push({
+      href:formProduct.quality_control,
+      rel: "processing:validation",
+      title: "Validation Link",
+    });
   }
 
   stac.properties.metadata_standards = formProduct.metadata_standards;
@@ -681,7 +683,6 @@ const formToStac = async (formProduct) => {
     stac.properties["project:use_cases"].push("NHM_2");
   }
   stac.properties.ingestion_status = formProduct.ingestion_status;
-  stac.properties.validation = formProduct.validation;
   stac.properties["processing:facility"] = formProduct.platform;
   const itemState = formProduct.state || "created";
   const reviewers =
