@@ -238,7 +238,7 @@ const stacToForm = (stac) => {
   }
   formProduct.legal.personalData = stac.properties.personalData;
   formProduct.provenance_name = stac.properties.provenance_name;
-  formProduct.preprocessing = stac.properties.preprocessing;
+  formProduct.preprocessing = stac.properties["processing:lineage"];
   formProduct.was_derived_from =
     stac.properties.wasDerivedFrom || stac.properties.source_data;
   formProduct.was_generated_by =
@@ -635,7 +635,7 @@ const formToStac = async (formProduct) => {
   }
   stac.properties.personalData = formProduct.legal.personalData;
   stac.properties.provenance_name = formProduct.provenance_name;
-  stac.properties.preprocessing = formProduct.preprocessing;
+  stac.properties["processing:lineage"] = formProduct.preprocessing;
   stac.wasDerivedFrom = formProduct.was_derived_from;
   stac.properties.wasGeneratedBy = formProduct.was_generated_by;
   stac.properties["validate:quality_measures"] = formProduct.data_quality;
