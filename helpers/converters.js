@@ -118,8 +118,12 @@ const stacToForm = (stac) => {
   formProduct.dataSource = stac.properties.dataSource;
   formProduct.description = stac.properties.description;
   formProduct.keywords = stac.properties.keywords;
-  formProduct.documentation = stac.properties.documentation;
-  formProduct.general.area_cover = stac.properties.area_cover;
+
+  stac.links
+      .filter((link) => link.rel === "processing")
+      .map((link) => (formProduct.documentation = link.href));
+
+  formProduct.documentation = formProduct.documentation || stac.properties.documentation
   if (stac.properties["project:purpose"]) formProduct.general.project_purpose = stac.properties["project:purpose"];
   formProduct.general.crs = stac.properties["proj:code"]
     ? stac.properties["proj:code"].split(":")[1]
@@ -423,7 +427,13 @@ const formToStac = async (formProduct) => {
   stac.properties.description = formProduct.description;
   stac.properties.area_cover = formProduct.general.area_cover;
   stac.properties["project:purpose"] = formProduct.general.project_purpose;
-  stac.properties.documentation = formProduct.documentation;
+  if (formProduct.documentation) {
+    stac.links.push({
+      href:formProduct.documentation,
+      rel: "processing",
+      title: "Documents & publications",
+    });
+  }
   stac.properties["proj:code"] =
     formProduct.general.crs && `EPSG:${formProduct.general.crs}`;
   const cube = stac.properties["cube:dimensions"];
